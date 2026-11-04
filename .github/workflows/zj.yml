@@ -1,0 +1,42 @@
+name: zhujiang
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: setup
+        run: pip install requests
+      - name: refresh
+        continue-on-error: true
+        run: |
+          python MIGU.py || true
+          python sort_m3u.py || true
+          ls -la *.m3u || true
+      - name: build
+        run: python gen.py || python pick_best.py
+      - name: show
+        run: cat zhujiang.m3u || true
+      - name: commit
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "actions"
+          if [ -f zhujiang.m3u ]; then
+            git add zhujiang.m3u
+            if git diff --cached --quiet; then
+              echo nochange
+            else
+              git commit -m "update $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              git push
+            fi
+          else
+            echo missing
+            exit 1
+          fi
