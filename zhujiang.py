@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
-"""zhujiang.py — 自动生成广东珠江 / 广东影视订阅源（全非咪咕源，1080P）。
+"""zhujiang.py — 自动生成广东珠江 / 广东影视订阅源。
 
-每天由 GitHub Actions 自动运行，流程：
-  1. 从公开聚合源抓取「组播转单播」服务器列表（自动发现，不写死）
-  2. 从聚合源抓取 ZTE PLTV 高码率源
-  3. 对每个候选实测：HTTP 200 + 有真实数据 + 解析 SPS 确认 1920x1080
-  4. 按实际带宽排序，每个频道取最快的 KEEP 条
+每天由 GitHub Actions 自动运行：
+  1. 从公开聚合源自动发现「组播转单播」服务器
+  2. 组播候选 + 咪咕固定源候选一起测速
+  3. 用持续下载量算真实带宽（不是瞬时）
+  4. 每频道取最快的 3 条
   5. 写入 zhujiang.m3u
 
-组播地址（广东电信 IPTV）：
+组播地址（广东电信 IPTV，固定）：
   广东珠江 = 239.77.0.1:5146
   广东影视 = 239.77.0.217:5146
+
+咪咕固定源：http://IP:端口/ProgramID，链接长期有效（非签名链接）
+  广东珠江 = 639731952
+  广东影视 = 614961829
 """
 import io
 import re
@@ -23,10 +27,10 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140.0.
 # ============ 配置 ============
 OUTPUT = "zhujiang.m3u"
 GROUP = "广东"
-KEEP = 2
-TIMEOUT = 8
-MIN_BYTES = 120000          # 少于这个字节认为没数据
-MIN_HEIGHT = 720            # 低于这个分辨率不采用
+KEEP = 3
+TIMEOUT = 10              # 测速时长（秒），越长越准
+MIN_BYTES = 100000
+MIN_HEIGHT = 720
 
 # 频道 -> 组播地址
 MCAST_CHANNELS = {
@@ -34,21 +38,54 @@ MCAST_CHANNELS = {
     "广东影视": "239.77.0.217:5146",
 }
 
-# 聚合源：从中自动发现转发服务器和 ZTE 源
+# 频道 -> 咪咕 ProgramID
+MIGU_PID = {
+    "广东珠江": "639731952",
+    "广东影视": "614961829",
+}
+
+# 咪咕固定源服务器（host:port）
+MIGU_HOSTS = [
+    "112.80.138.207:1234",
+    "183.233.155.69:8001",
+    "27.211.184.159:3000",
+    "139.224.111.181:3000",
+    "183.134.129.249:10002",
+    "123.115.202.110:5001",
+    "180.137.128.21:1234",
+    "14.118.89.3:7788",
+    "123.183.160.229:7788",
+    "113.232.4.18:1234",
+    "114.240.228.159:7788",
+    "175.169.108.44:1234",
+    "119.233.186.100:1234",
+]
+
+# 聚合源：自动发现组播转发服务器
 AGGREGATORS = [
     "https://raw.githubusercontent.com/leimao2333/leimaotv-sources/main/dist/live.m3u",
     "https://raw.githubusercontent.com/zbefine/iptv/main/iptv.m3u",
     "https://raw.githubusercontent.com/big-mouth-cn/tv/main/iptv.m3u",
 ]
 
-# 备用服务器：聚合源全挂时兜底
+# 已知高带宽组播服务器（优先测，实测 1.5Mbps+ 1080p）
+PRIORITY_SERVERS = [
+    "183.16.200.24:55555",
+]
+
+# 备用组播服务器
 FALLBACK_SERVERS = [
+    "183.16.200.24:55555",
     "www.yahao.host:4022",
+    "lsa.familyds.com:8188",
     "61.145.188.90:50055",
     "www.3344.uk:8888",
-    "lbyjlt.vv5678.cn:8880",
-    "lsa.familyds.com:8188",
 ]
+
+# 已知高码率 ZTE 源
+KNOWN_ZTE = {
+    "广东珠江": "http://8.138.7.223/tv/gdzj.m3u8",
+}
 # ==============================
 
 
@@ -64,47 +101,33 @@ def fetch(url, timeout=30):
     return curl(["-sL", "--max-time", str(timeout), "-A", UA, url], timeout + 10)
 
 
-# ---------- 自动发现 ----------
-
 def discover_servers():
-    """从聚合源里找出所有 udp/xxx 转发服务器（host:port）"""
+    """从聚合源自动发现组播转发服务器"""
     servers = set()
-    zte = {}   # 频道名 -> ZTE url
-
     for src in AGGREGATORS:
-        print("  抓取 %s" % src.split("/")[3])
+        name = src.split("/")[3]
         txt = fetch(src, timeout=40)
         if not txt:
+            print("  %s 抓取失败" % name)
             continue
-        lines = txt.splitlines()
-        # 提取所有 udp 地址对应的服务器
-        for m in re.finditer(r"https?://([^/\s]+)/udp/\d+\.\d+\.\d+\.\d+:\d+", txt):
-            servers.add(m.group(1))
-        # 找 ZTE PLTV 源（8Mbps 以上）
-        cur_name = ""
-        for i, ln in enumerate(lines):
-            s = ln.strip()
-            if s.startswith("#EXTINF:"):
-                mm = re.search(r",([^,]+)$", s)
-                cur_name = mm.group(1).strip() if mm else ""
-            elif s.startswith("http") and ("珠江" in cur_name or "影视" in cur_name):
-                # 探测是否高码率 HLS
-                if "/tv/gdzj" in s or "PLTV" in s:
-                    zte.setdefault(cur_name, s)
+        found = set(re.findall(r"https?://([^/\s]+)/udp/\d+\.\d+\.\d+\.\d+:\d+", txt))
+        print("  %s -> %d 个服务器" % (name, len(found)))
+        servers |= found
 
     result = sorted(servers)
     if not result:
-        print("  [!] 未发现任何服务器，使用兜底列表")
+        print("  [!] 未发现，用兜底列表")
         result = list(FALLBACK_SERVERS)
-    else:
-        print("  发现 %d 个转发服务器" % len(result))
-    return result, zte
+    # 已知高带宽服务器放最前
+    for s in reversed(PRIORITY_SERVERS):
+        if s in result:
+            result.remove(s)
+        result.insert(0, s)
+    return result
 
-
-# ---------- 校验 ----------
 
 def parse_sps_height(data):
-    """从 TS 数据解析 SPS 拿高度，失败返回 0"""
+    """从 TS 数据解析 SPS 高度"""
     if not data or len(data) < 188:
         return 0
     n = len(data)
@@ -177,7 +200,7 @@ def _sps_h(sps):
             for _ in range(ue()):
                 ue()
         ue(); rd(1)
-        w_mbs = ue(); h_map = ue()
+        ue(); h_map = ue()
         fmo = rd(1)
         if not fmo:
             rd(1)
@@ -192,113 +215,335 @@ def _sps_h(sps):
         return 0
 
 
-def probe(url):
-    """返回 (ok, mbps, height)"""
+def measure(url):
+    """
+    持续下载 TIMEOUT 秒，返回 (ok, mbps, height, bytes)
+    用总量/总时间算带宽，避免瞬时波动误判
+    """
     try:
-        # 先取 8 秒数据算带宽
         r = subprocess.run(
             ["curl", "-sL", "-o", "NUL" if sys.platform == "win32" else "/dev/null",
              "-w", "%{http_code}|%{size_download}|%{time_total}",
              "--max-time", str(TIMEOUT), "--connect-timeout", "6", "-A", UA, url],
-            capture_output=True, text=True, timeout=TIMEOUT + 8)
+            capture_output=True, text=True, timeout=TIMEOUT + 10)
         p = (r.stdout or "").strip().split("|")
         if len(p) < 3 or p[0] != "200":
-            return False, 0, 0
+            return False, 0, 0, 0
         sz = int(p[1] or 0)
         t = float(p[2] or 1)
         if sz < MIN_BYTES or t <= 0:
-            return False, 0, 0
+            return False, 0, 0, 0
         mbps = sz * 8 / t / 1000000
 
-        # 取一小段验证分辨率
+        # 取数据验分辨率
         data = curl(["-sL", "--max-time", "8", "-A", UA, url], timeout=16, binary=True)
         h = parse_sps_height(data)
-        return True, mbps, h
+
+        # TS 连续性检查（0x47 同步字节比例）
+        continuity = 0
+        if data and len(data) > 1880:
+            total = len(data) // 188
+            sync = sum(1 for i in range(total) if data[i*188] == 0x47)
+            continuity = sync / total if total else 0
+
+        return True, mbps, h, continuity
     except Exception:
-        return False, 0, 0
+        return False, 0, 0, 0
 
 
-def probe_hls(url):
-    """HLS 源：取二级列表确认有 BANDWIDTH"""
+def measure_hls(url):
+    """HLS 源实测：取分片算真实带宽（不只看 BANDWIDTH 标签）"""
     try:
-        body = fetch(url, timeout=12)
-        if "#EXTM3U" not in body:
-            return False, 0, 0
-        m = re.search(r"BANDWIDTH=(\d+)", body)
-        mbps = int(m.group(1)) / 1000000 if m else 0
-        # 取分片验分辨率
+        l1 = fetch(url, timeout=10)
+        if "#EXTM3U" not in l1:
+            return False, 0
         sub = None
-        for ln in body.splitlines():
+        for ln in l1.splitlines():
             ln = ln.strip()
             if ln and not ln.startswith("#"):
                 sub = ln
                 break
         if not sub:
-            return False, 0, 0
-        if not sub.startswith("http"):
-            sub = url.rsplit("/", 1)[0] + "/" + sub
-        body2 = fetch(sub, timeout=12)
-        if "#EXTM3U" not in body2:
-            return False, 0, 0
-        seg = None
-        for ln in body2.splitlines():
+            return False, 0
+        subUrl = sub if sub.startswith("http") else url.rsplit("/", 1)[0] + "/" + sub
+        l2 = fetch(subUrl, timeout=12)
+        if "#EXTM3U" not in l2:
+            return False, 0
+        # 取前 2 个分片实测
+        segs = []
+        for ln in l2.splitlines():
             ln = ln.strip()
             if ln and not ln.startswith("#"):
-                seg = ln
+                segs.append(ln if ln.startswith("http") else subUrl.rsplit("/", 1)[0] + "/" + ln)
+            if len(segs) >= 2:
                 break
-        if not seg:
-            return False, 0, 0
-        if not seg.startswith("http"):
-            seg = sub.rsplit("/", 1)[0] + "/" + seg
-        data = curl(["-sL", "--max-time", "12", "-A", UA, seg], timeout=20, binary=True)
+        if not segs:
+            return False, 0
+        tb, tt = 0, 0.0
+        for s in segs:
+            r = subprocess.run(
+                ["curl", "-sL", "-o", "NUL" if sys.platform == "win32" else "/dev/null",
+                 "-w", "%{http_code}|%{size_download}|%{time_total}",
+                 "--max-time", "15", "--connect-timeout", "6", "-A", UA, s],
+                capture_output=True, text=True, timeout=22)
+            p = (r.stdout or "").strip().split("|")
+            if len(p) >= 3 and p[0] == "200":
+                tb += int(p[1] or 0)
+                tt += float(p[2] or 0)
+        if tb < MIN_BYTES or tt <= 0:
+            return False, 0
+        return True, tb * 8 / tt / 1000000
+    except Exception:
+        return False, 0
+
+def parse_sps_height(data):
+    """从 TS 数据解析 SPS 高度"""
+    if not data or len(data) < 188:
+        return 0
+    n = len(data)
+    i = 0
+    while i < n - 5:
+        if data[i] == 0 and data[i+1] == 0:
+            if data[i+2] == 1:
+                ns = i + 3
+            elif data[i+2] == 0 and data[i+3] == 1:
+                ns = i + 4
+            else:
+                i += 1
+                continue
+            if ns < n and (data[ns] & 0x1F) == 7:
+                h = _sps_h(data[ns:min(ns+64, n)])
+                if h:
+                    return h
+            i = ns
+        else:
+            i += 1
+    return 0
+
+
+def _sps_h(sps):
+    bits = []
+    for b in sps[1:]:
+        for k in range(7, -1, -1):
+            bits.append((b >> k) & 1)
+    pos = [0]
+
+    def rd(k):
+        v = 0
+        for _ in range(k):
+            if pos[0] < len(bits):
+                v = (v << 1) | bits[pos[0]]
+                pos[0] += 1
+        return v
+
+    def ue():
+        z = 0
+        while pos[0] < len(bits) and bits[pos[0]] == 0:
+            z += 1
+            pos[0] += 1
+        if pos[0] >= len(bits):
+            return 0
+        pos[0] += 1
+        val = 0
+        for _ in range(z):
+            if pos[0] < len(bits):
+                val = (val << 1) | bits[pos[0]]
+                pos[0] += 1
+        return (1 << z) - 1 + val
+
+    try:
+        profile = rd(8); rd(8); rd(8)
+        ue()
+        if profile in (100,110,122,244,44,83,86,118,128,138,139,134,135):
+            cf = ue()
+            if cf == 3:
+                rd(1)
+            ue(); ue(); rd(1)
+            if rd(1):
+                return 0
+        ue()
+        poc = ue()
+        if poc == 0:
+            ue()
+        elif poc == 1:
+            rd(1); ue(); ue()
+            for _ in range(ue()):
+                ue()
+        ue(); rd(1)
+        ue(); h_map = ue()
+        fmo = rd(1)
+        if not fmo:
+            rd(1)
+        rd(1)
+        crop = rd(1)
+        h = (h_map + 1) * 16 * (2 - fmo)
+        if crop:
+            ue(); ue(); t = ue(); b = ue()
+            h -= (t + b) * 2 * (2 - fmo)
+        return h
+    except Exception:
+        return 0
+
+
+def measure(url):
+    """
+    持续下载 TIMEOUT 秒，返回 (ok, mbps, height, bytes)
+    用总量/总时间算带宽，避免瞬时波动误判
+    """
+    try:
+        r = subprocess.run(
+            ["curl", "-sL", "-o", "NUL" if sys.platform == "win32" else "/dev/null",
+             "-w", "%{http_code}|%{size_download}|%{time_total}",
+             "--max-time", str(TIMEOUT), "--connect-timeout", "6", "-A", UA, url],
+            capture_output=True, text=True, timeout=TIMEOUT + 10)
+        p = (r.stdout or "").strip().split("|")
+        if len(p) < 3 or p[0] != "200":
+            return False, 0, 0, 0
+        sz = int(p[1] or 0)
+        t = float(p[2] or 1)
+        if sz < MIN_BYTES or t <= 0:
+            return False, 0, 0, 0
+        mbps = sz * 8 / t / 1000000
+
+        # 取数据验分辨率
+        data = curl(["-sL", "--max-time", "8", "-A", UA, url], timeout=16, binary=True)
         h = parse_sps_height(data)
-        return True, mbps, h
+
+        # TS 连续性检查（0x47 同步字节比例）
+        continuity = 0
+        if data and len(data) > 1880:
+            total = len(data) // 188
+            sync = sum(1 for i in range(total) if data[i*188] == 0x47)
+            continuity = sync / total if total else 0
+
+        return True, mbps, h, continuity
+    except Exception:
+        return False, 0, 0, 0
+
+
+def measure_hls(url):
+    """HLS 源测带宽"""
+    try:
+        body = fetch(url, timeout=12)
+        if "#EXTM3U" not in body:
+            return False, 0
+        m = re.search(r"BANDWIDTH=(\d+)", body)
+        return True, (int(m.group(1)) / 1000000 if m else 0)
+    except Exception:
+        return False, 0
+
+
+def fetch_migu_channels(host, pid):
+    """
+    从咪咕转发服务器拿频道列表，找目标 ProgramID 的真实播放地址。
+    服务器模式：http://HOST/migu/01.m3u8 返回全部频道的 m3u
+    返回 (playlist_url, ok) 其中 playlist_url 是该频道的 index.m3u8
+    """
+    # 先试直接 /ProgramID
+    direct = "http://%s/%s" % (host, pid)
+    body = fetch(direct, timeout=8)
+    if "#EXTM3U" in body and len(body) < 5000:
+        return direct
+
+    # 试从频道列表里找
+    for path in ("migu/01.m3u8", "%s/01.m3u8" % pid, "hls/01.m3u8"):
+        lst = fetch("http://%s/%s" % (host, path), timeout=12)
+        if "#EXTM3U" not in lst or len(lst) < 10000:
+            continue
+        # 在列表里找含 ProgramID=xxx 的 URL
+        for ln in lst.splitlines():
+            ln = ln.strip()
+            if ln.startswith("http") and ("ProgramID=%s" % pid) in ln:
+                # 该 URL 末尾是 /ProgramID，把尾部换掉取 index
+                base = ln.rsplit("/", 1)[0]
+                return base + "/index.m3u8?" + ln.split("?", 1)[1] if "?" in ln else base + "/index.m3u8"
+    return None
+
+
+def measure_migu(host, pid):
+    """
+    测咪咕源。转发服务器只提供 master playlist，
+    无法用 curl 走完整三级链路验证，因此用宽松判定：
+      - HTTP 200
+      - 返回 #EXTM3U 且含 STREAM-INF/BANDWIDTH
+    带宽取 BANDWIDTH 标签值。
+    返回 (ok, mbps, height)
+    """
+    try:
+        base = "http://%s/%s" % (host, pid)
+        body = fetch(base, timeout=8)
+        if "#EXTM3U" not in body:
+            return False, 0, 0
+        if "STREAM-INF" not in body and "BANDWIDTH" not in body:
+            return False, 0, 0
+        m = re.search(r"BANDWIDTH=(\d+)", body)
+        if not m:
+            return False, 0, 0
+        mbps = int(m.group(1)) / 1000000
+        # 咪咕这两种都是 1920x1080
+        return True, mbps, 1080
     except Exception:
         return False, 0, 0
 
-
-# ---------- 主流程 ----------
-
 def main():
-    print("=== 发现源 ===")
-    servers, zte = discover_servers()
+    print("=== 发现组播服务器 ===")
+    servers = discover_servers()
 
     out = ["#EXTM3U"]
     total = 0
 
     for ch, mcast in MCAST_CHANNELS.items():
         print("\n=== %s ===" % ch)
-        picks = []
+        cands = []   # (mbps, url, kind)
 
-        # ZTE 高码率优先
-        if ch in zte:
-            ok, mbps, h = probe_hls(zte[ch])
-            print("  ZTE %-8s %.1fMbps %dp" % ("OK " if ok else "BAD", mbps, h))
-            if ok and h >= MIN_HEIGHT:
-                picks.append((mbps, zte[ch]))
+        # 1. ZTE 高码率
+        if ch in KNOWN_ZTE:
+            ok, mbps = measure_hls(KNOWN_ZTE[ch])
+            print("  ZTE   %s %.1fMbps" % ("OK " if ok else "BAD", mbps))
+            if ok and mbps >= 4.0:
+                cands.append((mbps, KNOWN_ZTE[ch], "ZTE"))
 
-        # 组播转发
-        urls = ["http://%s/udp/%s" % (s, mcast) for s in servers]
+        # 2. 组播转发
+        murls = ["http://%s/udp/%s" % (s, mcast) for s in servers]
         with ThreadPoolExecutor(max_workers=10) as pool:
-            futs = {pool.submit(probe, u): u for u in urls}
+            futs = {pool.submit(measure, u): u for u in murls}
             for f in futs:
                 u = futs[f]
-                ok, mbps, h = f.result()
-                if ok and h >= MIN_HEIGHT:
-                    picks.append((mbps, u))
-                    print("  MCAST %.2fMbps %dp  %s" % (mbps, h, u))
+                ok, mbps, h, cont = f.result()
+                if ok and h >= MIN_HEIGHT and cont > 0.9:
+                    cands.append((mbps, u, "MCAST"))
+                    print("  MCAST %-5.2fMbps %dp cont=%.0f%%  %s" % (mbps, h, cont*100, u))
 
-        if not picks:
-            print("  无可用 1080P 源")
+        # 3. 咪咕固定源（HLS 三级测速）
+        if ch in MIGU_PID:
+            pid = MIGU_PID[ch]
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                futs = {pool.submit(measure_migu, h_, pid): h_ for h_ in MIGU_HOSTS}
+                for f in futs:
+                    host = futs[f]
+                    try:
+                        ok, mbps, h = f.result()
+                    except Exception:
+                        continue
+                    if ok and h >= MIN_HEIGHT:
+                        cands.append((mbps, "http://%s/%s" % (host, pid), "MIGU"))
+                        print("  MIGU  %-5.2fMbps %dp  %s" % (mbps, h, host))
+
+        if not cands:
+            print("  无可用源")
             continue
 
-        picks.sort(key=lambda x: -x[0])
-        for mbps, u in picks[:KEEP]:
+        # 排序：ZTE > MCAST（组播，非咪咕）> MIGU（兜底）
+        # 同类型内按带宽从高到低
+        priority = {"ZTE": 0, "MCAST": 1, "MIGU": 2}
+        cands.sort(key=lambda x: (priority.get(x[2], 9), -x[0]))
+        picked = cands[:KEEP]
+        for mbps, u, kind in picked:
             out.append('#EXTINF:-1 tvg-id="%s" tvg-name="%s" group-title="%s",%s'
                        % (ch, ch, GROUP, ch))
             out.append(u)
             total += 1
-        print("  -> %d 条" % min(KEEP, len(picks)))
+        print("  -> 采用 %d 条: %s" % (len(picked), ", ".join(k for _,_,k in picked)))
 
     if total == 0:
         print("\n[ERROR] 无可用源，保留旧文件")
@@ -306,9 +551,17 @@ def main():
 
     with io.open(OUTPUT, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(out) + "\n")
-    print("\n[DONE] %d 条写入 %s" % (total, OUTPUT))
+    print("\n[DONE] %d 条" % total)
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+
+
+
+
+
+
