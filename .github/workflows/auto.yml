@@ -1,0 +1,40 @@
+name: zhujiang
+
+on:
+  schedule:
+    # 每天 UTC 09:00 = 北京时间 17:00
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: run
+        run: python zhujiang.py
+
+      - name: show
+        run: |
+          echo "=== result ==="
+          cat zhujiang.m3u || true
+
+      - name: commit
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "actions"
+          if [ ! -f zhujiang.m3u ]; then
+            echo "no output"
+            exit 1
+          fi
+          git add zhujiang.m3u
+          if git diff --cached --quiet; then
+            echo "no change"
+          else
+            git commit -m "update $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
