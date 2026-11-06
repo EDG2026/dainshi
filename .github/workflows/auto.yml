@@ -1,10 +1,13 @@
 name: zhujiang
 
+
 on:
   schedule:
-    # 每天 UTC 09:00 = 北京时间 17:00
-    - cron: "0 9 * * *"
+    # 每 6 小时一次（UTC 0/6/12/18 点 = 北京 8/14/20/2 点）
+    - cron: "0 */6 * * *"→ Runs every 6 hours
+
   workflow_dispatch:
+
 
 jobs:
   build:
@@ -15,13 +18,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+
       - name: run
         run: python zhujiang.py
+
 
       - name: show
         run: |
           echo "=== result ==="
           cat zhujiang.m3u || true
+
 
       - name: commit
         run: |
@@ -38,3 +44,4 @@ jobs:
             git commit -m "update $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           fi
+
