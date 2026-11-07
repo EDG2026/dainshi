@@ -4,7 +4,7 @@ name: zhujiang
 on:
   schedule:
     # 每 6 小时一次（UTC 0/6/12/18 点 = 北京 8/14/20/2 点）
-    - cron: "0 */6 * * *"→ Runs every 6 hours
+    - cron: "0 */6 * * *"
 
   workflow_dispatch:
 
