@@ -1,13 +1,9 @@
 #EXTM3U
 #EXTINF:-1 tvg-id="广东珠江" tvg-name="广东珠江" group-title="广东",广东珠江
-http://8.138.7.223/tv/gdzj.m3u8
+http://lsa.familyds.com:8188/udp/239.77.0.1:5146
 #EXTINF:-1 tvg-id="广东珠江" tvg-name="广东珠江" group-title="广东",广东珠江
-http://183.233.155.69:8001/639731952
-#EXTINF:-1 tvg-id="广东珠江" tvg-name="广东珠江" group-title="广东",广东珠江
-http://180.137.128.21:1234/639731952
+http://www.3344.uk:8888/udp/239.77.0.1:5146
 #EXTINF:-1 tvg-id="广东影视" tvg-name="广东影视" group-title="广东",广东影视
-http://183.233.155.69:8001/614961829
+http://lsa.familyds.com:8188/udp/239.77.0.217:5146
 #EXTINF:-1 tvg-id="广东影视" tvg-name="广东影视" group-title="广东",广东影视
-http://180.137.128.21:1234/614961829
-#EXTINF:-1 tvg-id="广东影视" tvg-name="广东影视" group-title="广东",广东影视
-http://14.118.89.3:7788/614961829
+http://www.3344.uk:8888/udp/239.77.0.217:5146
