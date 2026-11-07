@@ -3,8 +3,8 @@ name: zhujiang
 
 on:
   schedule:
-    # 每 6 小时一次（UTC 0/6/12/18 点 = 北京 8/14/20/2 点）
-    - cron: "0 */6 * * *"
+    # 每 48 小时一次（UTC 0 点，即北京 8 点，隔日触发）
+    - cron: "0 0 */2 * *"
 
   workflow_dispatch:
 
@@ -44,4 +44,3 @@ jobs:
             git commit -m "update $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           fi
-
