@@ -1,10 +1,12 @@
 name: zhujiang
 
-
 on:
   schedule:
-    # 每 48 小时一次（UTC 0 点，即北京 8 点，隔日触发）
-    - cron: "0 0 */2 * *"
+    # 一天三次：北京 08:00 / 16:00 / 24:00。
+    # GitHub 免费 runner 的 schedule 实测延迟 3~6 小时，且高负载时会丢触发，
+    # 单点一天一次等于赌运气；三次冗余后，客户端最迟当天一定拿到新清单。
+    # 脚本幂等：源全活就不动 m3u，只刷新心跳，重复跑没有副作用。
+    - cron: "0 0,8,16 * * *"
 
   workflow_dispatch:
 
@@ -25,8 +27,10 @@ jobs:
 
       - name: show
         run: |
-          echo "=== result ==="
+          echo "=== zhujiang.m3u ==="
           cat zhujiang.m3u || true
+          echo "=== heartbeat ==="
+          cat .state/heartbeat.json || true
 
 
       - name: commit
@@ -37,10 +41,13 @@ jobs:
             echo "no output"
             exit 1
           fi
-          git add zhujiang.m3u
+          # 心跳文件每轮都会变，所以这里每轮必有 commit —— 用来绕开
+          # GitHub「仓库 60 天无 push 则停用 schedule」的规则。
+          git add zhujiang.m3u .state/heartbeat.json
           if git diff --cached --quiet; then
             echo "no change"
           else
             git commit -m "update $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git pull --rebase --autostash || true
             git push
           fi
