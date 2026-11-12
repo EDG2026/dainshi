@@ -336,12 +336,16 @@ def pcr_clock(blob):
 def probe_ts(url, seconds=SAMPLE_SECONDS):
     """裸 TS 使用 PCR 节目时钟，不再假定所有频道都是 2Mbps。"""
     tmp = TMP + "." + str(abs(hash(url)) % 1000000)
+    # 用 time_total - time_starttransfer 当有效下载窗口：
+    # time_total 含 DNS/TCP/TLS 握手，把它算进播放速度会让人为偏低 2–7%。
     args = ["-sL", "--max-time", str(seconds), "-A", UA,
-            "-o", tmp, "-w", "%{http_code}|%{size_download}|%{time_total}", url]
+            "-o", tmp,
+            "-w", "%{http_code}|%{size_download}|%{time_total}|%{time_starttransfer}", url]
     out = run_curl(args, timeout=seconds + 15).decode("ascii", errors="ignore")
     try:
-        code, size, wall = out.strip().split("|")
-        size, wall = int(size), float(wall)
+        code, size, total, first = out.strip().split("|")
+        size = int(size)
+        wall = max(0.001, float(total) - float(first))
     except Exception:
         code, size, wall = "000", 0, 0.0
     try:
