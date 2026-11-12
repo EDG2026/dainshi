@@ -1,5 +1,5 @@
 {
-  "last_check_utc": "2026-11-12T17:00:00Z",
+  "last_check_utc": "2026-11-12T17:25:32Z",
   "changed": true,
   "note": "updated",
   "total": 6,
@@ -10,9 +10,9 @@
       "http://lsa.familyds.com:8188/udp/239.77.0.1:5146"
     ],
     "广东影视": [
-      "http://61.145.188.90:50055/udp/239.77.0.217:5146",
       "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-      "http://lsa.familyds.com:8188/udp/239.77.0.217:5146"
+      "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
+      "http://61.145.188.90:50055/udp/239.77.0.217:5146"
     ]
   },
   "measured": {
@@ -20,76 +20,76 @@
       {
         "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
         "kind": "ts",
-        "ratio": 0.9484279871148416,
-        "mbps": 7.619811574740246,
-        "encoded_mbps": 8.03414880018465,
+        "ratio": 0.9952879035509621,
+        "mbps": 8.357818458633131,
+        "encoded_mbps": 8.3973877596767,
         "height": 1080,
-        "note": "PCR 9.48s/墙钟10.0s",
+        "note": "PCR 9.52s/墙钟9.6s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 252
+        "samples": 261
       },
       {
         "url": "http://61.145.188.90:50055/udp/239.77.0.1:5146",
         "kind": "ts",
-        "ratio": 0.9448371539244373,
-        "mbps": 7.810580266381125,
-        "encoded_mbps": 8.266588833789415,
+        "ratio": 0.9943541636851585,
+        "mbps": 8.354568443513447,
+        "encoded_mbps": 8.402004787258825,
         "height": 1080,
-        "note": "PCR 9.45s/墙钟10.0s",
+        "note": "PCR 9.55s/墙钟9.6s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 255
+        "samples": 262
       },
       {
         "url": "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
         "kind": "ts",
-        "ratio": 0.9344156556791351,
-        "mbps": 7.645607155282426,
-        "encoded_mbps": 8.182233579686315,
+        "ratio": 0.992113193003884,
+        "mbps": 8.171049302216947,
+        "encoded_mbps": 8.236005084739315,
         "height": 1080,
-        "note": "PCR 9.34s/墙钟10.0s",
+        "note": "PCR 9.38s/墙钟9.5s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 249
+        "samples": 251
       }
     ],
     "广东影视": [
       {
-        "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
+        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
         "kind": "ts",
-        "ratio": 0.9484350061768333,
-        "mbps": 7.879935313596046,
-        "encoded_mbps": 8.30835561981234,
+        "ratio": 0.9949519193133374,
+        "mbps": 8.312441995362649,
+        "encoded_mbps": 8.354616774948735,
         "height": 1080,
-        "note": "PCR 9.48s/墙钟10.0s",
+        "note": "PCR 9.55s/墙钟9.6s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 259
+      },
+      {
+        "url": "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
+        "kind": "ts",
+        "ratio": 0.9935286075631528,
+        "mbps": 8.247966671813554,
+        "encoded_mbps": 8.30169016677185,
+        "height": 1080,
+        "note": "PCR 9.41s/墙钟9.5s",
         "pcr_ok": true,
         "clock": "pcr",
         "samples": 255
       },
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
+        "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
         "kind": "ts",
-        "ratio": 0.9482704917726876,
-        "mbps": 7.576446246490132,
-        "encoded_mbps": 7.989752198580805,
+        "ratio": 0.9728794723816654,
+        "mbps": 6.758032195626801,
+        "encoded_mbps": 6.946422848333664,
         "height": 1080,
-        "note": "PCR 9.48s/墙钟10.0s",
+        "note": "PCR 9.34s/墙钟9.6s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 251
-      },
-      {
-        "url": "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
-        "kind": "ts",
-        "ratio": 0.9379397323453456,
-        "mbps": 7.296360022501406,
-        "encoded_mbps": 7.779135237459923,
-        "height": 1080,
-        "note": "PCR 9.38s/墙钟10.0s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 237
+        "samples": 212
       }
     ]
   }
