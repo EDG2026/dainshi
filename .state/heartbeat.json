@@ -1,5 +1,5 @@
 {
-  "last_check_utc": "2026-11-12T15:39:03Z",
+  "last_check_utc": "2026-11-12T15:47:24Z",
   "changed": false,
   "note": "no change",
   "total": 6,
@@ -20,23 +20,23 @@
       {
         "url": "https://2.fast.hidns.vip/163189/gdzj",
         "ratio": 0.4,
-        "mbps": 1.91,
+        "mbps": 1.38,
         "height": 1080,
         "kind": "hls",
         "verdict": "slow"
       },
       {
         "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-        "ratio": 3.78,
-        "mbps": 7.56,
+        "ratio": 2.95,
+        "mbps": 5.9,
         "height": 1080,
         "kind": "ts",
         "verdict": "fast"
       },
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-        "ratio": 3.17,
-        "mbps": 6.33,
+        "ratio": 3.71,
+        "mbps": 7.43,
         "height": 1080,
         "kind": "ts",
         "verdict": "fast"
@@ -45,27 +45,27 @@
     "广东影视": [
       {
         "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-        "ratio": 3.07,
-        "mbps": 6.14,
+        "ratio": 3.75,
+        "mbps": 7.5,
         "height": 1080,
         "kind": "ts",
         "verdict": "fast"
       },
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-        "ratio": 3.72,
-        "mbps": 7.43,
+        "ratio": 3.56,
+        "mbps": 7.13,
         "height": 1080,
         "kind": "ts",
         "verdict": "fast"
       },
       {
         "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
-        "ratio": 3.78,
-        "mbps": 7.56,
+        "ratio": 0.59,
+        "mbps": 1.19,
         "height": 1080,
         "kind": "ts",
-        "verdict": "fast"
+        "verdict": "slow"
       }
     ]
   }
