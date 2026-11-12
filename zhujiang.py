@@ -454,6 +454,27 @@ def main():
                 if len(chosen) >= TARGET_PER_CH:
                     break
 
+        # 本频道一条活的都没测到时，单独把旧源再探一遍。
+        # 不能把整份旧清单当成"活着"直接续命：那样坏源会一直被保留。
+        if not chosen:
+            old_live = []
+            for u in prev.get(ch, []):
+                if u not in ALLOWED[ch]:
+                    continue
+                print("  RETRY 本轮无活源，单独复测旧源  %s" % u)
+                r = probe(u)
+                if not r:
+                    continue
+                if r["kind"] == "hls" and 0 < r["height"] < MIN_HEIGHT:
+                    continue
+                old_live.append(r)
+                break
+            if old_live:
+                chosen = old_live
+                print("  [i] 旧源复测仍有 1 条可用，保留")
+            else:
+                print("  [!] 旧源也全部连不上，本轮不写入本频道")
+
         keep = [r["url"] for r in chosen]
         picked[ch] = keep
         detail[ch] = [{"url": r["url"], "ratio": round(r["ratio"], 2),
@@ -467,6 +488,20 @@ def main():
             hls_n = sum(1 for r in chosen if r["kind"] == "hls")
             slot = sum(1 for r in chosen if r["kind"] == "ts")
             print("  [i] 取 %d 条：HLS %d + 组播 %d" % (len(keep), hls_n, slot))
+
+    # 只有一个频道全死时，另一个频道照常更新；死亡的频道沿用上一轮旧清单，
+    # 不让整份 m3u 被一个频道的故障拖成"保留旧文件"。
+    final = {}
+    for ch in CHANNELS:
+        if picked.get(ch):
+            final[ch] = picked[ch]
+        elif prev.get(ch):
+            final[ch] = prev[ch]
+            print("\n[KEEP] %s 本轮无活源，沿用上一轮 %d 条旧清单"
+                  % (ch, len(prev[ch])))
+        else:
+            final[ch] = []
+    picked = final
 
     new_text = render(picked)
     total = sum(len(v) for v in picked.values())
