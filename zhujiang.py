@@ -1,23 +1,14 @@
 # -*- coding: utf-8 -*-
-"""zhujiang.py v3 — 广东珠江 / 广东影视订阅源生成
+"""zhujiang.py v4 — 广东珠江 / 广东影视直播源实测与订阅生成
 
-v1 的问题（2026-11-12 实测）：
-  * 门槛按"当时 8.5Mbps"定的（MIN_MBPS=3.0 / GOOD_MBPS=6.0），源整体掉到 1Mbps 后
-    6 条全判降质、候选池全不合格 → total=0 → 心跳写 total=0，清单靠"保留旧文件"吊着。
-  * 只认 udpxy 裸 TS，不认 HLS。4 个 udpxy 站晚高峰被限到 ~1.1Mbps，
-    PCR 推进只有墙钟的 0.53–0.74 倍 —— 名义 2Mbps 也追不上实时，必卡。
+- HLS：同一连接连续下载 3 段，以分段 EXTINF/下载耗时的中位数衡量播放能力。
+- 裸 TS：读取 MPEG-TS PCR 节目时钟，PCR 推进/墙钟 >=0.85 才视为流畅；
+  不再用固定的 2Mbps 估算，避免把 8Mbps 源误算成 ratio=4。
+- 每频道选 3 条；能流畅播放的排前，旧源只在同级时优先，慢 HLS 不会顶到第一。
+- 输出按「珠江一条、影视一条」交替，每条内部按流畅度降序。
+- 无 PCR 的源只判活并放在最后；频道故障保留最近清单，每轮写心跳保活。
 
-v3 的设计：
-  * 阈值只判活。CI 跑在 GitHub 美国机房，测出的速度是"美国→源"，
-    跟广东用户实际看到的是两回事，所以速度不参与排序。
-  * 顺序由 SOURCES 写死：HLS 在前（国内海外都能连），udpxy 组播在后（只在广东快）。
-    上一轮的清单只用于 diff，不回灌排序，避免组播一旦入选就永久占位。
-  * 每频道取前 TARGET_PER_CH 条能连上的（HLS 最多占 2 条，留 1 条给组播）；
-    连不上的跳过，绝不因为"都不够好"清空清单。
-  * 每轮必写 .state/heartbeat.json（GitHub 60 天无 push 会自动停用 schedule）。
-  * total=0 且存在旧清单时退出码仍是 0，保证后面提交心跳的步骤不被跳过。
-
-用法：python zhujiang.py   →  生成 zhujiang.m3u（6 条：珠江 3 + 影视 3）
+用法：python zhujiang.py
 """
 import io
 import json
@@ -25,6 +16,8 @@ import os
 import re
 import sys
 import subprocess
+import statistics
+import datetime
 from urllib.parse import urlsplit
 from concurrent.futures import ThreadPoolExecutor
 
@@ -39,15 +32,19 @@ TMP = ".probe.tmp"
 
 CHANNELS = ["广东珠江", "广东影视"]
 TARGET_PER_CH = 3
-# 阈值只用于两件事：判活、以及在心跳里标注实测快慢。
-# 不用来排序——CI 跑在美国，测出的是"美国→源"的速度，跟广东用户看到的不是一回事。
-FAST_RATIO = 1.00              # 心跳里标 fast 的门槛（仅供参考）
-MIN_HEIGHT = 720              # 能解出高度就必须 >=720P；解不出高度的裸 TS 记 0，不当淘汰线
-TS_NOMINAL_MBPS = 2.0          # 裸 TS 的名义编码码率（本机解 PCR 实测 1.6–2.2）
-N_PROBE_SEGS = 1            # HLS 只取 1 段判活；多段测速留给本地手工验证用
-SAMPLE_SECONDS = 6             # 裸 TS 采样时长
-MIN_SEG_BYTES = 50000          # 分段小于此视为错误页/空段
+MIN_HEIGHT = 720
+SAMPLE_SECONDS = 10
+N_PROBE_SEGS = 3
+MIN_SEG_BYTES = 50000
 RETRY = 1
+FAST_RATIO = 1.00
+FLUENT_RATIO = 0.85
+# HLS 采用同一连接连续下载的分段计时中位数，排除首段握手和偶发抖动。
+HLS_PER_SEG_TIMEOUT = 35
+HLS_HARD_TIMEOUT = 150
+# PCR 能直接给出组播的节目时钟；PCR 推进 / 墙钟推进 >=1 才跟得上直播。
+# 少量源不发 PCR，回退到「字节速率 / 节目时长」；没有两种时钟时只判活，不冒充测速。
+MIN_STREAM_BYTES = 10000
 
 # ===== 源池：每频道按"上一次实测优劣"预排序，运行时全部重新测，按 ratio 重排 =====
 SOURCES = {
@@ -266,29 +263,33 @@ def probe_hls(url):
         except Exception:
             pass
     hard = 25
-    args = ["-sL", "--max-time", str(hard), "-A", UA]
+    # --next 让每个分段独立计时，同时复用同一条连接；不能用整批总时间，
+    # 否则一个 60 秒的坏段会污染全部样本。
+    args = ["-sL", "-A", UA]
     for k, u in enumerate(urls):
-        # 最后一段落到临时文件，用来解 SPS 拿分辨率；其余段丢弃
-        args += ["-o", TMP if k == len(urls) - 1 else "NUL", u]
-    args += ["-w", "%{http_code}|%{size_download}|%{time_total}\n"]
-    out = run_curl(args, timeout=max(90, int(sum(use_d) * 6) + 30))
+        if k:
+            args += ["--next", "-sL", "-A", UA]
+        args += ["--max-time", str(HLS_PER_SEG_TIMEOUT),
+                 "-o", TMP if k == len(urls) - 1 else "NUL", u,
+                 "-w", "%{http_code}|%{size_download}|%{time_total}\n"]
+    out = run_curl(args, timeout=HLS_HARD_TIMEOUT)
     rows = [r for r in out.decode("ascii", errors="ignore").splitlines() if r.count("|") == 2]
     if len(rows) != len(urls):
         return None
-    tot_size = 0
-    tot_wall = 0.0
-    last_blob = b""
-    for r in rows:
+    samples = []
+    for k, r in enumerate(rows):
         code, size, wall = r.split("|")
-        if code != "200":
-            return None
-        tot_size += int(size)
-        tot_wall += float(wall)
-    if tot_size < MIN_SEG_BYTES * len(urls) or tot_wall <= 0:
+        size, wall = int(size), float(wall)
+        if code != "200" or size < MIN_SEG_BYTES or wall <= 0:
+            continue
+        samples.append((use_d[k] / wall, size * 8 / use_d[k] / 1e6))
+    if not samples:
         return None
+    ratios = [x[0] for x in samples]
+    ratio = statistics.median(ratios)
+    mbps = statistics.median([x[1] for x in samples])
     dur = sum(use_d)
-    ratio = dur / tot_wall
-    mbps = tot_size * 8 / dur / 1e6
+    tot_wall = sum(float(r.split("|")[2]) for r in rows)
     height = 0
     if os.path.exists(TMP):
         try:
@@ -302,18 +303,74 @@ def probe_hls(url):
         except Exception:
             pass
     return {"url": url, "kind": "hls", "ratio": ratio, "mbps": mbps,
-            "height": height, "note": "%d段/%.0fs内容/%.1fs下" % (len(urls), dur, tot_wall)}
+            "height": height, "note": "%d/%d段,中位播放比" % (len(samples), len(urls)),
+            "pcr_ok": False, "clock": "hls", "samples": len(samples)}
+
+
+def pcr_clock(blob):
+    """返回 (主PCR PID的时长秒, 采样数)。PCR 五字节在 adaptation flags 之后。"""
+    clocks = {}
+    for i in range(0, len(blob) - 188 + 1, 188):
+        if blob[i] != 0x47:
+            continue
+        pid = ((blob[i + 1] & 0x1f) << 8) | blob[i + 2]
+        if ((blob[i + 3] >> 4) & 3) not in (2, 3):
+            continue
+        q = i + 4
+        if q >= len(blob):
+            continue
+        alen = blob[q]
+        if alen >= 7 and q + 6 < len(blob) and (blob[q + 1] & 0x10):
+            b = blob[q + 2:q + 7]
+            pcr = ((b[0] << 25) | (b[1] << 17) | (b[2] << 9)
+                   | (b[3] << 1) | (b[4] >> 7)) / 90000.0
+            clocks.setdefault(pid, []).append(pcr)
+    if not clocks:
+        return 0.0, 0
+    vals = max(clocks.values(), key=len)
+    if len(vals) < 3:
+        return 0.0, len(vals)
+    return vals[-1] - vals[0], len(vals)
 
 
 def probe_ts(url, seconds=SAMPLE_SECONDS):
-    """裸 TS：采样一段，用「实测 Mbps / 名义码率」当可播放比。"""
-    code, size, wall, height = grab(url, timeout=seconds)
-    if not code or size < 10000:
+    """裸 TS 使用 PCR 节目时钟，不再假定所有频道都是 2Mbps。"""
+    tmp = TMP + "." + str(abs(hash(url)) % 1000000)
+    args = ["-sL", "--max-time", str(seconds), "-A", UA,
+            "-o", tmp, "-w", "%{http_code}|%{size_download}|%{time_total}", url]
+    out = run_curl(args, timeout=seconds + 15).decode("ascii", errors="ignore")
+    try:
+        code, size, wall = out.strip().split("|")
+        size, wall = int(size), float(wall)
+    except Exception:
+        code, size, wall = "000", 0, 0.0
+    try:
+        blob = io.open(tmp, "rb").read() if size >= MIN_STREAM_BYTES else b""
+    except Exception:
+        blob = b""
+    try:
+        os.remove(tmp)
+    except Exception:
+        pass
+    if code != "200" or not blob or wall <= 0:
         return None
-    mbps = size * 8 / wall / 1e6
-    ratio = mbps / TS_NOMINAL_MBPS if TS_NOMINAL_MBPS else 0
+    height = parse_sps_height(blob)
+    pcr_span, pcr_n = pcr_clock(blob)
+    mbps = len(blob) * 8 / wall / 1e6
+    if pcr_span > 0.05:
+        ratio = pcr_span / wall
+        clock = "pcr"
+        encoded = len(blob) * 8 / pcr_span / 1e6
+        note = "PCR %.2fs/墙钟%.1fs" % (pcr_span, wall)
+    else:
+        # 没有 PCR 时不能伪造 2Mbps 基准。标为 unknown，仅作最后保底。
+        ratio = 0.0
+        clock = "unknown"
+        encoded = 0.0
+        note = "无PCR,只判活"
     return {"url": url, "kind": "ts", "ratio": ratio, "mbps": mbps,
-            "height": height, "note": "%.1fs采样" % wall}
+            "encoded_mbps": encoded, "height": height, "note": note,
+            "pcr_ok": pcr_span > 0.05, "clock": clock, "samples": pcr_n}
 
 
 def probe(url):
@@ -352,10 +409,30 @@ def read_current():
     return cur, raw
 
 
-def render(picked):
-    out = ["#EXTM3U"]
+def fluent(r):
+    """有时钟且达到实时播放门槛才算流畅；无 PCR 只能判活，不能排前面。"""
+    return (r["clock"] != "unknown" and r["ratio"] >= FLUENT_RATIO
+            and not (r["kind"] == "hls" and 0 < r["height"] < MIN_HEIGHT))
+
+
+def render(picked, measured=None):
+    """两个频道逐条交替；每条按本轮流畅度排序。
+    播放器的顺序是全局的，不能先塞满珠江再放影视。"""
+    measured = measured or {}
+    rows = []
     for ch in CHANNELS:
+        rs = {r["url"]: r for r in measured.get(ch, [])}
         for u in picked.get(ch, []):
+            r = rs.get(u)
+            # 频道全死沿用旧清单时没有本轮测量，放该频道末尾
+            score = r["ratio"] if r and fluent(r) else -1.0
+            rows.append((ch, u, score))
+    out = ["#EXTM3U"]
+    for i in range(max((len(picked.get(ch, [])) for ch in CHANNELS), default=0)):
+        round_rows = [(ch, u, s) for ch, u, s in rows
+                      if picked.get(ch, []).index(u) == i]
+        round_rows.sort(key=lambda x: -x[2])
+        for ch, u, score in round_rows:
             out.append('#EXTINF:-1 tvg-id="%s" tvg-name="%s" group-title="%s",%s'
                        % (ch, ch, GROUP, ch))
             out.append(u)
@@ -365,8 +442,7 @@ def render(picked):
 def write_heartbeat(picked, changed, note, detail):
     if not os.path.isdir(STATE_DIR):
         os.makedirs(STATE_DIR)
-    now = subprocess.run(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"],
-                         capture_output=True, text=True).stdout.strip() or "?"
+    now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     rec = {
         "last_check_utc": now,
         "changed": bool(changed),
@@ -397,57 +473,42 @@ def main():
         # prefer 会把组播永久顶到前面，HLS 再也回不来。
         order = list(ALLOWED[ch])
 
-        # 组播并发探（每路 6 秒采样，彼此影响小）；
-        # HLS 串行探（需要连续带宽，和 6 路组播并发抢出口会把 ratio 压掉一个量级）。
-        raw_ts = [u for u in order if ("/udp/" in u or "/rtp/" in u)]
-        http_src = [u for u in order if u not in raw_ts]
+        # 所有源串行测量：测速本身就是带宽测试，并发会把自己的出口打满，
+        # 得出"源慢"的假结论。每频道最多 6 条，优先复测上一轮在用的源。
+        prev_urls = [u for u in prev.get(ch, []) if u in order]
+        order = prev_urls + [u for u in order if u not in prev_urls]
         got = {}
-
-        if raw_ts:
-            with ThreadPoolExecutor(max_workers=min(6, len(raw_ts))) as ex:
-                for u, r in zip(raw_ts, ex.map(probe, raw_ts)):
-                    got[u] = r
-        for u in http_src:
+        for u in order:
             got[u] = probe(u)
 
         scored = []
         for u in order:
-            if u not in got:
-                continue
-            r = got[u]
+            r = got.get(u)
             if not r:
                 print("  DEAD  %s" % u)
                 continue
-            # HLS 能解出高度，就必须 >=720P；解不出高度的裸 TS 不当淘汰线
-            # （udpxy 压缩/截断的流有时探不到 SPS，历史记录里出现过 0p 但实际是 1080）。
             if r["kind"] == "hls" and 0 < r["height"] < MIN_HEIGHT:
                 print("  LOW-HD  %4dp  %s" % (r["height"], u))
                 continue
-            # 判活标准：拿到 200 + 字节数过门槛 + 能解析出视频。
-            # 不拿 ratio 当淘汰线——美国 runner 测中国的源，ratio 天然偏低。
-            flag = "FAST" if r["ratio"] >= FAST_RATIO else "OK  "
-            print("  %s  ratio=%.2f  %5.2fMbps  %4dp  %-12s %s"
+            if r["clock"] == "unknown":
+                flag = "LIVE"
+            elif r["ratio"] >= 1.0:
+                flag = "FAST"
+            elif r["ratio"] >= 0.85:
+                flag = "OK  "
+            else:
+                flag = "SLOW"
+            print("  %s  play=%.2f  wire=%5.2fMbps  %4dp  %-18s %s"
                   % (flag, r["ratio"], r["mbps"], r["height"], r["note"], u))
             scored.append(r)
 
-        # 按源池顺序取，不按 ratio 排序：CI 跑在美国，ratio 反映的是"美国→广东
-        # 私人 udpxy"的链路，跟国内实际体验无关。ratio 只判活，不决定优先级。
-        scored.sort(key=lambda x: order.index(x["url"]))
+        # 播放能力优先；上一轮已用的源在同档时优先，避免轻微抖动引起频繁换源。
+        # 没有 PCR 的源永远排在有时钟的源后面，但可用来保底。
+        def rank(r):
+            return (0 if fluent(r) else 1, -r["ratio"],
+                    0 if r["url"] in prev_urls else 1, order.index(r["url"]))
 
-        # 按池顺序选，不强制保留 HLS：用户实际在广东，组播优先；
-        # HLS 只在组播不足或失效时补位，避免慢 HLS 顶到第一条。
-        chosen = []
-        for r in scored:
-            chosen.append(r)
-            if len(chosen) >= TARGET_PER_CH:
-                break
-        # 组播不足时把被挤掉的 HLS 捡回来，宁可全是 HLS 也不要少于 3 条
-        if len(chosen) < TARGET_PER_CH:
-            for r in scored:
-                if r not in chosen:
-                    chosen.append(r)
-                if len(chosen) >= TARGET_PER_CH:
-                    break
+        chosen = sorted(scored, key=rank)[:TARGET_PER_CH]
 
         # 本频道一条活的都没测到时，单独把旧源再探一遍。
         # 不能把整份旧清单当成"活着"直接续命：那样坏源会一直被保留。
@@ -474,8 +535,10 @@ def main():
         picked[ch] = keep
         detail[ch] = [{"url": r["url"], "ratio": round(r["ratio"], 2),
                        "mbps": round(r["mbps"], 2), "height": r["height"],
-                       "kind": r["kind"],
-                       "verdict": "fast" if r["ratio"] >= FAST_RATIO else "slow"}
+                       "kind": r["kind"], "clock": r["clock"],
+                       "encoded_mbps": round(r.get("encoded_mbps", 0), 2),
+                       "verdict": ("unknown" if r["clock"] == "unknown"
+                                   else "fast" if r["ratio"] >= 1.0 else "slow")}
                       for r in chosen]
         if not keep:
             print("  [!] 本频道本轮无一条能连上")
@@ -483,6 +546,10 @@ def main():
             hls_n = sum(1 for r in chosen if r["kind"] == "hls")
             slot = sum(1 for r in chosen if r["kind"] == "ts")
             print("  [i] 取 %d 条：HLS %d + 组播 %d" % (len(keep), hls_n, slot))
+
+        # 旧源复测命中的也补进 measured；沿用的死频道不伪造测量值。
+        selected = {r["url"]: r for r in chosen}
+        detail[ch] = [selected[u] for u in keep if u in selected]
 
     # 只有一个频道全死时，另一个频道照常更新；死亡的频道沿用上一轮旧清单，
     # 不让整份 m3u 被一个频道的故障拖成"保留旧文件"。
@@ -498,7 +565,7 @@ def main():
             final[ch] = []
     picked = final
 
-    new_text = render(picked)
+    new_text = render(picked, detail)
     total = sum(len(v) for v in picked.values())
 
     if total == 0:
