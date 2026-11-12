@@ -1,71 +1,95 @@
 {
-  "last_check_utc": "2026-11-12T16:39:13Z",
-  "changed": false,
-  "note": "no change",
+  "last_check_utc": "2026-11-12T17:00:00Z",
+  "changed": true,
+  "note": "updated",
   "total": 6,
   "channels": {
     "广东珠江": [
       "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-      "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-      "http://61.145.188.90:50055/udp/239.77.0.1:5146"
+      "http://61.145.188.90:50055/udp/239.77.0.1:5146",
+      "http://lsa.familyds.com:8188/udp/239.77.0.1:5146"
     ],
     "广东影视": [
+      "http://61.145.188.90:50055/udp/239.77.0.217:5146",
       "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-      "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-      "http://61.145.188.90:50055/udp/239.77.0.217:5146"
+      "http://lsa.familyds.com:8188/udp/239.77.0.217:5146"
     ]
   },
   "measured": {
     "广东珠江": [
       {
         "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-        "ratio": 3.85,
-        "mbps": 7.69,
-        "height": 1080,
         "kind": "ts",
-        "verdict": "fast"
-      },
-      {
-        "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-        "ratio": 3.06,
-        "mbps": 6.12,
+        "ratio": 0.9484279871148416,
+        "mbps": 7.619811574740246,
+        "encoded_mbps": 8.03414880018465,
         "height": 1080,
-        "kind": "ts",
-        "verdict": "fast"
+        "note": "PCR 9.48s/墙钟10.0s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 252
       },
       {
         "url": "http://61.145.188.90:50055/udp/239.77.0.1:5146",
-        "ratio": 3.23,
-        "mbps": 6.46,
-        "height": 1080,
         "kind": "ts",
-        "verdict": "fast"
+        "ratio": 0.9448371539244373,
+        "mbps": 7.810580266381125,
+        "encoded_mbps": 8.266588833789415,
+        "height": 1080,
+        "note": "PCR 9.45s/墙钟10.0s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 255
+      },
+      {
+        "url": "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
+        "kind": "ts",
+        "ratio": 0.9344156556791351,
+        "mbps": 7.645607155282426,
+        "encoded_mbps": 8.182233579686315,
+        "height": 1080,
+        "note": "PCR 9.34s/墙钟10.0s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 249
       }
     ],
     "广东影视": [
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-        "ratio": 3.91,
-        "mbps": 7.82,
-        "height": 1080,
-        "kind": "ts",
-        "verdict": "fast"
-      },
-      {
-        "url": "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-        "ratio": 3.02,
-        "mbps": 6.04,
-        "height": 1080,
-        "kind": "ts",
-        "verdict": "fast"
-      },
-      {
         "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
-        "ratio": 3.96,
-        "mbps": 7.93,
-        "height": 1080,
         "kind": "ts",
-        "verdict": "fast"
+        "ratio": 0.9484350061768333,
+        "mbps": 7.879935313596046,
+        "encoded_mbps": 8.30835561981234,
+        "height": 1080,
+        "note": "PCR 9.48s/墙钟10.0s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 255
+      },
+      {
+        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
+        "kind": "ts",
+        "ratio": 0.9482704917726876,
+        "mbps": 7.576446246490132,
+        "encoded_mbps": 7.989752198580805,
+        "height": 1080,
+        "note": "PCR 9.48s/墙钟10.0s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 251
+      },
+      {
+        "url": "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
+        "kind": "ts",
+        "ratio": 0.9379397323453456,
+        "mbps": 7.296360022501406,
+        "encoded_mbps": 7.779135237459923,
+        "height": 1080,
+        "note": "PCR 9.38s/墙钟10.0s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 237
       }
     ]
   }
