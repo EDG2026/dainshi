@@ -48,6 +48,22 @@ jobs:
             echo "no change"
           else
             git commit -m "update $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git pull --rebase --autostash || true
-            git push
+            # 调度任务可能和本次手动任务同时写心跳。不能把 rebase 失败吞掉后
+            # 继续 push：那样只会出现 non-fast-forward，且没有任何有效重试。
+            for i in 1 2 3; do
+              if git push; then
+                echo "push ok"
+                exit 0
+              fi
+              echo "push retry $i"
+              sleep 5
+              git fetch origin main
+              git rebase origin/main || {
+                git rebase --abort || true
+                echo "rebase conflict: regenerated output kept for next run"
+                exit 1
+              }
+            done
+            echo "push failed after 3 retries"
+            exit 1
           fi
