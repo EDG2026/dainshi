@@ -1,13 +1,13 @@
 {
-  "last_check_utc": "2026-11-12T15:47:24Z",
+  "last_check_utc": "2026-11-12T16:07:06Z",
   "changed": false,
   "note": "no change",
   "total": 6,
   "channels": {
     "广东珠江": [
-      "https://2.fast.hidns.vip/163189/gdzj",
       "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-      "http://www.yahao.host:4022/udp/239.77.0.1:5146"
+      "http://www.yahao.host:4022/udp/239.77.0.1:5146",
+      "http://61.145.188.90:50055/udp/239.77.0.1:5146"
     ],
     "广东影视": [
       "http://www.3344.uk:8888/udp/239.77.0.217:5146",
@@ -18,25 +18,25 @@
   "measured": {
     "广东珠江": [
       {
-        "url": "https://2.fast.hidns.vip/163189/gdzj",
-        "ratio": 0.4,
-        "mbps": 1.38,
-        "height": 1080,
-        "kind": "hls",
-        "verdict": "slow"
-      },
-      {
         "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-        "ratio": 2.95,
-        "mbps": 5.9,
+        "ratio": 3.02,
+        "mbps": 6.05,
         "height": 1080,
         "kind": "ts",
         "verdict": "fast"
       },
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-        "ratio": 3.71,
-        "mbps": 7.43,
+        "ratio": 2.54,
+        "mbps": 5.08,
+        "height": 1080,
+        "kind": "ts",
+        "verdict": "fast"
+      },
+      {
+        "url": "http://61.145.188.90:50055/udp/239.77.0.1:5146",
+        "ratio": 3.15,
+        "mbps": 6.29,
         "height": 1080,
         "kind": "ts",
         "verdict": "fast"
@@ -45,27 +45,27 @@
     "广东影视": [
       {
         "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-        "ratio": 3.75,
-        "mbps": 7.5,
+        "ratio": 3.09,
+        "mbps": 6.18,
         "height": 1080,
         "kind": "ts",
         "verdict": "fast"
       },
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-        "ratio": 3.56,
-        "mbps": 7.13,
+        "ratio": 2.91,
+        "mbps": 5.82,
         "height": 1080,
         "kind": "ts",
         "verdict": "fast"
       },
       {
         "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
-        "ratio": 0.59,
-        "mbps": 1.19,
+        "ratio": 3.31,
+        "mbps": 6.61,
         "height": 1080,
         "kind": "ts",
-        "verdict": "slow"
+        "verdict": "fast"
       }
     ]
   }
