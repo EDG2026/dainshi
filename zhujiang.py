@@ -52,16 +52,15 @@ RETRY = 1
 # ===== 源池：每频道按"上一次实测优劣"预排序，运行时全部重新测，按 ratio 重排 =====
 SOURCES = {
     "广东珠江": [
-        # 1080P / 2.7Mbps，Cloudflare，国内海外都快；实测 10 段中位 ratio 1.31
-        "https://2.fast.hidns.vip/163189/gdzj",
-        # 1080P / 2.7Mbps，Cloudflare，边缘 IP 抖动大但可播
-        "https://gxyd.484947.xyz/PLTV/77777777/224/3221225717/index.m3u8"
-        "?servicetype=1&&IASHttpSessionId=RR778520250111113355399717&ispcode=1108",
-        # 以下 4 条是广东私人 udpxy，晚高峰限速到 ~1.1Mbps，只作兜底
+        # 组播优先： hidns 在 2026-11-13 00:00 实测连续 3 段只有 0.23–0.27 倍实时，必卡。
         "http://www.3344.uk:8888/udp/239.77.0.1:5146",
         "http://www.yahao.host:4022/udp/239.77.0.1:5146",
         "http://61.145.188.90:50055/udp/239.77.0.1:5146",
         "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
+        # HLS 只作异地/组播失效时的备用，不再排第一
+        "https://gxyd.484947.xyz/PLTV/77777777/224/3221225717/index.m3u8"
+        "?servicetype=1&&IASHttpSessionId=RR778520250111113355399717&ispcode=1108",
+        "https://2.fast.hidns.vip/163189/gdzj",
     ],
     "广东影视": [
         # 没有 HLS 源可用（荔枝网官方线全带签名、gxyd 无此频道、公开列表只有组播），
@@ -435,14 +434,10 @@ def main():
         # 私人 udpxy"的链路，跟国内实际体验无关。ratio 只判活，不决定优先级。
         scored.sort(key=lambda x: order.index(x["url"]))
 
-        # HLS 最多占 2 条，留 1 条给组播：HLS 是第三方中转站，随时可能关停；
-        # 组播是广东本地源，晚高峰才慢，两者互不替代，必须都留。
-        chosen, n_hls = [], 0
+        # 按池顺序选，不强制保留 HLS：用户实际在广东，组播优先；
+        # HLS 只在组播不足或失效时补位，避免慢 HLS 顶到第一条。
+        chosen = []
         for r in scored:
-            if r["kind"] == "hls":
-                if n_hls >= TARGET_PER_CH - 1:
-                    continue
-                n_hls += 1
             chosen.append(r)
             if len(chosen) >= TARGET_PER_CH:
                 break
