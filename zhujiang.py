@@ -42,6 +42,7 @@ TARGET_PER_CH = 3
 # 阈值只用于两件事：判活、以及在心跳里标注实测快慢。
 # 不用来排序——CI 跑在美国，测出的是"美国→源"的速度，跟广东用户看到的不是一回事。
 FAST_RATIO = 1.00              # 心跳里标 fast 的门槛（仅供参考）
+MIN_HEIGHT = 720              # 能解出高度就必须 >=720P；解不出高度的裸 TS 记 0，不当淘汰线
 TS_NOMINAL_MBPS = 2.0          # 裸 TS 的名义编码码率（本机解 PCR 实测 1.6–2.2）
 N_PROBE_SEGS = 1            # HLS 只取 1 段判活；多段测速留给本地手工验证用
 SAMPLE_SECONDS = 6             # 裸 TS 采样时长
@@ -417,6 +418,11 @@ def main():
             r = got[u]
             if not r:
                 print("  DEAD  %s" % u)
+                continue
+            # HLS 能解出高度，就必须 >=720P；解不出高度的裸 TS 不当淘汰线
+            # （udpxy 压缩/截断的流有时探不到 SPS，历史记录里出现过 0p 但实际是 1080）。
+            if r["kind"] == "hls" and 0 < r["height"] < MIN_HEIGHT:
+                print("  LOW-HD  %4dp  %s" % (r["height"], u))
                 continue
             # 判活标准：拿到 200 + 字节数过门槛 + 能解析出视频。
             # 不拿 ratio 当淘汰线——美国 runner 测中国的源，ratio 天然偏低。
