@@ -1,95 +1,94 @@
 {
-  "last_check_utc": "2026-11-12T17:25:32Z",
+  "last_check_utc": "2026-11-13T05:38:24Z",
   "changed": true,
   "note": "updated",
   "total": 6,
   "channels": {
     "广东珠江": [
-      "http://www.3344.uk:8888/udp/239.77.0.1:5146",
       "http://61.145.188.90:50055/udp/239.77.0.1:5146",
-      "http://lsa.familyds.com:8188/udp/239.77.0.1:5146"
+      "http://www.yahao.host:4022/udp/239.77.0.1:5146",
+      "http://www.3344.uk:8888/udp/239.77.0.1:5146"
     ],
     "广东影视": [
-      "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-      "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
-      "http://61.145.188.90:50055/udp/239.77.0.217:5146"
+      "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
+      "http://61.145.188.90:50055/udp/239.77.0.217:5146",
+      "http://www.3344.uk:8888/udp/239.77.0.217:5146"
     ]
   },
   "measured": {
     "广东珠江": [
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-        "kind": "ts",
-        "ratio": 0.9952879035509621,
-        "mbps": 8.357818458633131,
-        "encoded_mbps": 8.3973877596767,
-        "height": 1080,
-        "note": "PCR 9.52s/墙钟9.6s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 261
-      },
-      {
         "url": "http://61.145.188.90:50055/udp/239.77.0.1:5146",
         "kind": "ts",
-        "ratio": 0.9943541636851585,
-        "mbps": 8.354568443513447,
-        "encoded_mbps": 8.402004787258825,
-        "height": 1080,
-        "note": "PCR 9.55s/墙钟9.6s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 262
-      },
-      {
-        "url": "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
-        "kind": "ts",
-        "ratio": 0.992113193003884,
-        "mbps": 8.171049302216947,
-        "encoded_mbps": 8.236005084739315,
-        "height": 1080,
-        "note": "PCR 9.38s/墙钟9.5s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 251
-      }
-    ],
-    "广东影视": [
-      {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-        "kind": "ts",
-        "ratio": 0.9949519193133374,
-        "mbps": 8.312441995362649,
-        "encoded_mbps": 8.354616774948735,
-        "height": 1080,
-        "note": "PCR 9.55s/墙钟9.6s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 259
-      },
-      {
-        "url": "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
-        "kind": "ts",
-        "ratio": 0.9935286075631528,
-        "mbps": 8.247966671813554,
-        "encoded_mbps": 8.30169016677185,
+        "ratio": 0.991970264086455,
+        "mbps": 7.676995670861557,
+        "encoded_mbps": 7.739138912527393,
         "height": 1080,
         "note": "PCR 9.41s/墙钟9.5s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 255
+        "samples": 237
+      },
+      {
+        "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
+        "kind": "ts",
+        "ratio": 0.988448178277999,
+        "mbps": 7.362743545699293,
+        "encoded_mbps": 7.448790647301427,
+        "height": 1080,
+        "note": "PCR 8.40s/墙钟8.5s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 206
+      },
+      {
+        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
+        "kind": "ts",
+        "ratio": 0.98320795163195,
+        "mbps": 7.038632810544413,
+        "encoded_mbps": 7.1588444731976955,
+        "height": 1080,
+        "note": "PCR 9.31s/墙钟9.5s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 219
+      }
+    ],
+    "广东影视": [
+      {
+        "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
+        "kind": "hls",
+        "ratio": 5.378303118474606,
+        "mbps": 1.371272,
+        "height": 720,
+        "note": "3/3段,中位播放比",
+        "pcr_ok": false,
+        "clock": "hls",
+        "samples": 3
       },
       {
         "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
         "kind": "ts",
-        "ratio": 0.9728794723816654,
-        "mbps": 6.758032195626801,
-        "encoded_mbps": 6.946422848333664,
+        "ratio": 0.995713062119304,
+        "mbps": 7.117251978641432,
+        "encoded_mbps": 7.147894558591881,
         "height": 1080,
-        "note": "PCR 9.34s/墙钟9.6s",
+        "note": "PCR 9.45s/墙钟9.5s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 212
+        "samples": 220
+      },
+      {
+        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
+        "kind": "ts",
+        "ratio": 0.9951263362100088,
+        "mbps": 7.101961606640422,
+        "encoded_mbps": 7.136743695969918,
+        "height": 1080,
+        "note": "PCR 9.45s/墙钟9.5s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 222
       }
     ]
   }
