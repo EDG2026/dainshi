@@ -1,65 +1,65 @@
 {
-  "last_check_utc": "2026-11-13T16:01:07Z",
+  "last_check_utc": "2026-11-13T21:58:03Z",
   "changed": true,
   "note": "updated",
   "total": 6,
   "channels": {
     "广东珠江": [
+      "http://61.145.188.90:50055/udp/239.77.0.1:5146",
       "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-      "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-      "http://lsa.familyds.com:8188/udp/239.77.0.1:5146"
+      "http://www.yahao.host:4022/udp/239.77.0.1:5146"
     ],
     "广东影视": [
       "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
-      "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-      "http://lsa.familyds.com:8188/udp/239.77.0.217:5146"
+      "http://61.145.188.90:50055/udp/239.77.0.217:5146",
+      "http://www.3344.uk:8888/udp/239.77.0.217:5146"
     ]
   },
   "measured": {
     "广东珠江": [
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
+        "url": "http://61.145.188.90:50055/udp/239.77.0.1:5146",
         "kind": "ts",
-        "ratio": 0.9979014730281978,
-        "mbps": 8.39866949720068,
-        "encoded_mbps": 8.416331395638052,
+        "ratio": 0.9947415063093482,
+        "mbps": 8.2421031410816,
+        "encoded_mbps": 8.285673301862245,
         "height": 1080,
-        "note": "PCR 9.55s/墙钟9.6s",
+        "note": "PCR 9.52s/墙钟9.6s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 263
+        "samples": 257
+      },
+      {
+        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
+        "kind": "ts",
+        "ratio": 0.9945323657447079,
+        "mbps": 8.272865282624554,
+        "encoded_mbps": 8.318346961418209,
+        "height": 1080,
+        "note": "PCR 9.48s/墙钟9.5s",
+        "pcr_ok": true,
+        "clock": "pcr",
+        "samples": 257
       },
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
         "kind": "ts",
-        "ratio": 0.9923655524572375,
-        "mbps": 8.028312878982502,
-        "encoded_mbps": 8.090076140897137,
+        "ratio": 0.9943077308019759,
+        "mbps": 8.212778302992453,
+        "encoded_mbps": 8.259795281253918,
         "height": 1080,
-        "note": "PCR 9.38s/墙钟9.5s",
+        "note": "PCR 9.07s/墙钟9.1s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 248
-      },
-      {
-        "url": "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
-        "kind": "ts",
-        "ratio": 0.9860102647824025,
-        "mbps": 8.121116775728163,
-        "encoded_mbps": 8.236341005557756,
-        "height": 1080,
-        "note": "PCR 7.32s/墙钟7.4s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 196
+        "samples": 245
       }
     ],
     "广东影视": [
       {
         "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
         "kind": "hls",
-        "ratio": 12.787233226346816,
-        "mbps": 1.416016,
+        "ratio": 6.499710762871053,
+        "mbps": 1.3818,
         "height": 720,
         "note": "3/3段,中位播放比",
         "pcr_ok": false,
@@ -67,28 +67,28 @@
         "samples": 3
       },
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
+        "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
         "kind": "ts",
-        "ratio": 0.993223678278007,
-        "mbps": 8.337618017369813,
-        "encoded_mbps": 8.394501862687253,
+        "ratio": 0.9945426722571143,
+        "mbps": 8.22725509733247,
+        "encoded_mbps": 8.272400296973398,
         "height": 1080,
-        "note": "PCR 8.54s/墙钟8.6s",
+        "note": "PCR 9.52s/墙钟9.6s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 234
+        "samples": 258
       },
       {
-        "url": "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
+        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
         "kind": "ts",
-        "ratio": 0.9905483177803942,
-        "mbps": 8.249169644888344,
-        "encoded_mbps": 8.327882140442133,
+        "ratio": 0.9944694157677834,
+        "mbps": 8.270647748386018,
+        "encoded_mbps": 8.316643646602886,
         "height": 1080,
-        "note": "PCR 9.45s/墙钟9.5s",
+        "note": "PCR 9.52s/墙钟9.6s",
         "pcr_ok": true,
         "clock": "pcr",
-        "samples": 257
+        "samples": 258
       }
     ]
   }
