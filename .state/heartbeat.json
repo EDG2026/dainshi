@@ -1,94 +1,89 @@
 {
-  "last_check_utc": "2026-11-13T21:58:03Z",
+  "last_check_utc": "2026-11-14T05:11:07Z",
   "changed": true,
   "note": "updated",
   "total": 6,
   "channels": {
     "广东珠江": [
-      "http://61.145.188.90:50055/udp/239.77.0.1:5146",
-      "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-      "http://www.yahao.host:4022/udp/239.77.0.1:5146"
+      "http://www.yahao.host:4022/udp/239.77.0.1:5146",
+      "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
+      "http://61.145.188.90:50055/udp/239.77.0.1:5146"
     ],
     "广东影视": [
-      "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
+      "http://www.yahao.host:4022/udp/239.77.0.217:5146",
       "http://61.145.188.90:50055/udp/239.77.0.217:5146",
-      "http://www.3344.uk:8888/udp/239.77.0.217:5146"
+      "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53"
     ]
   },
   "measured": {
     "广东珠江": [
       {
-        "url": "http://61.145.188.90:50055/udp/239.77.0.1:5146",
-        "kind": "ts",
-        "ratio": 0.9947415063093482,
-        "mbps": 8.2421031410816,
-        "encoded_mbps": 8.285673301862245,
-        "height": 1080,
-        "note": "PCR 9.52s/墙钟9.6s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 257
-      },
-      {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-        "kind": "ts",
-        "ratio": 0.9945323657447079,
-        "mbps": 8.272865282624554,
-        "encoded_mbps": 8.318346961418209,
-        "height": 1080,
-        "note": "PCR 9.48s/墙钟9.5s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 257
-      },
-      {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-        "kind": "ts",
-        "ratio": 0.9943077308019759,
-        "mbps": 8.212778302992453,
-        "encoded_mbps": 8.259795281253918,
+        "ratio": 0.99,
+        "play": 0.993,
+        "mbps": 8.42,
+        "encoded_mbps": 8.48,
         "height": 1080,
-        "note": "PCR 9.07s/墙钟9.1s",
-        "pcr_ok": true,
+        "kind": "ts",
         "clock": "pcr",
-        "samples": 245
+        "verdict": "slow"
+      },
+      {
+        "url": "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
+        "ratio": 1.0,
+        "play": 0.998,
+        "mbps": 6.1,
+        "encoded_mbps": 6.11,
+        "height": 1080,
+        "kind": "ts",
+        "clock": "pcr",
+        "verdict": "slow"
+      },
+      {
+        "url": "http://61.145.188.90:50055/udp/239.77.0.1:5146",
+        "ratio": 0.99,
+        "play": 0.995,
+        "mbps": 8.3,
+        "encoded_mbps": 8.34,
+        "height": 1080,
+        "kind": "ts",
+        "clock": "pcr",
+        "verdict": "slow"
       }
     ],
     "广东影视": [
       {
-        "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
-        "kind": "hls",
-        "ratio": 6.499710762871053,
-        "mbps": 1.3818,
-        "height": 720,
-        "note": "3/3段,中位播放比",
-        "pcr_ok": false,
-        "clock": "hls",
-        "samples": 3
+        "url": "http://www.yahao.host:4022/udp/239.77.0.217:5146",
+        "ratio": 0.98,
+        "play": 0.976,
+        "mbps": 8.17,
+        "encoded_mbps": 8.38,
+        "height": 1080,
+        "kind": "ts",
+        "clock": "pcr",
+        "verdict": "slow"
       },
       {
         "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
-        "kind": "ts",
-        "ratio": 0.9945426722571143,
-        "mbps": 8.22725509733247,
-        "encoded_mbps": 8.272400296973398,
+        "ratio": 0.99,
+        "play": 0.988,
+        "mbps": 8.13,
+        "encoded_mbps": 8.23,
         "height": 1080,
-        "note": "PCR 9.52s/墙钟9.6s",
-        "pcr_ok": true,
+        "kind": "ts",
         "clock": "pcr",
-        "samples": 258
+        "verdict": "slow"
       },
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-        "kind": "ts",
-        "ratio": 0.9944694157677834,
-        "mbps": 8.270647748386018,
-        "encoded_mbps": 8.316643646602886,
-        "height": 1080,
-        "note": "PCR 9.52s/墙钟9.6s",
-        "pcr_ok": true,
-        "clock": "pcr",
-        "samples": 258
+        "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
+        "ratio": 5.27,
+        "play": 1.0,
+        "mbps": 1.39,
+        "encoded_mbps": 0,
+        "height": 720,
+        "kind": "hls",
+        "clock": "hls",
+        "verdict": "fast"
       }
     ]
   }
