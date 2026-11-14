@@ -32,6 +32,8 @@ TMP = ".probe.tmp"
 
 CHANNELS = ["广东珠江", "广东影视"]
 TARGET_PER_CH = 3
+QUOTA_1080 = 2                  # 每频道先保 2 条 1080P
+QUOTA_720 = 1                   # 再留 1 条 720P 做晚高峰备选
 MIN_HEIGHT = 720
 SAMPLE_SECONDS = 10
 N_PROBE_SEGS = 3
@@ -54,6 +56,8 @@ SOURCES = {
         "http://www.yahao.host:4022/udp/239.77.0.1:5146",
         "http://61.145.188.90:50055/udp/239.77.0.1:5146",
         "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
+        # 荔枝网 720P 转发：晚高峰组播掉到 0.7x 时它仍是 1.00，顶位用
+        "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44",
         # HLS 只作异地/组播失效时的备用，不再排第一
         "https://gxyd.484947.xyz/PLTV/77777777/224/3221225717/index.m3u8"
         "?servicetype=1&&IASHttpSessionId=RR778520250111113355399717&ispcode=1108",
@@ -427,15 +431,23 @@ def play_ratio(r):
 
 
 def quality_score(r):
-    """排序用的综合分，从高到低依次比：画质档位、播放余量、源类型稳定性。
+    """排序用的综合分：**先能不能实时播放，再谈画质**。
 
-    - 画质档位：1080P=2，已知 >=720P=1，高度未知=1（按及格处理，不冤杀），
-      明确低于 720P=0。
-    - 播放余量：统一后的 play_ratio 分三档（满速 / 够用 / 不够），
-      不按连续值比较，避免测量噪声压过源类型的真实差异。
-    - 源类型：同样条件下组播优先于 HLS —— HLS 是第三方中转站、带时效签名，
-      历史上整站 302 过；组播是广东本地源，晚高峰才慢。
+    这个顺序不能反。2026-11-14 19:47 实测：晚高峰四条组播全是 1080P 但播放比
+    只有 0.74–0.81（数据比实时慢 20%，必卡）；同期荔枝网 720P 转发是 1.00 完全
+    流畅。如果画质排在流畅度前面，就会把"看不动的 1080P"顶到第一条，
+    用户看到的效果就是"晚上看电视太卡"。
+
+    档次（从高到低）：
+      1. 能实时播放（play_ratio >= FLUENT_RATIO）→ 此时才比画质：1080P > 720P
+      2. 跟不上实时但还活着 → 无论多少 P，都排在上面两类之后
+      3. 无时钟（只判活）→ 最后
+
+    同档内再比：播放余量档、源类型（组播比 HLS 稳，HLS 是第三方中转带时效签名）。
     """
+    p = play_ratio(r)
+    can_play = (r["clock"] != "unknown" and p >= FLUENT_RATIO)
+
     height = r["height"] or 0
     if height >= 1080:
         h_tier = 2
@@ -443,17 +455,23 @@ def quality_score(r):
         h_tier = 1
     else:
         h_tier = 0
-    # 播放余量也分档，不做连续比较：0.99 和 1.00 的差别是测量噪声，
-    # 拿它去压过"组播比 HLS 稳"这种真实差异不合理。
-    p = play_ratio(r)
+
+    if r["clock"] == "unknown":
+        live_tier = 0
+    elif can_play:
+        live_tier = 2
+    else:
+        live_tier = 1
+
     if p >= 0.95:
         p_tier = 2
     elif p >= FLUENT_RATIO:
         p_tier = 1
     else:
         p_tier = 0
+
     stable = 1 if r["kind"] == "ts" else 0
-    return (h_tier, p_tier, stable)
+    return (live_tier, h_tier, p_tier, stable)
 
 
 def fluent(r):
@@ -559,7 +577,28 @@ def main():
                     0 if r["url"] in prev_urls else 1,
                     order.index(r["url"]))
 
-        chosen = sorted(scored, key=rank)[:TARGET_PER_CH]
+        # 配额制：2 条 1080P + 1 条 720P（晚高峰备选）。
+        # 理由：晚高峰组播实测掉到 0.74–0.81 播放比（必卡），此时能实时播放的
+        # 720P 才是真正能看的；但白天的 1080P 画质更好，两者都要留。
+        ordered = sorted(scored, key=rank)
+        hd = [r for r in ordered if (r["height"] or 0) >= 1080]
+        sd = [r for r in ordered if 0 < (r["height"] or 0) < 1080]
+        unk = [r for r in ordered if not (r["height"] or 0)]
+
+        chosen = hd[:QUOTA_1080]
+        chosen += sd[:QUOTA_720]
+        # 配额没满时用剩下的补（高度未知的源也在这里兜底）
+        for pool in (hd[QUOTA_1080:], sd[QUOTA_720:], unk):
+            for r in pool:
+                if len(chosen) >= TARGET_PER_CH:
+                    break
+                chosen.append(r)
+        chosen = chosen[:TARGET_PER_CH]
+        # 配额定了"有哪些"，这里定"谁在前"。
+        # 配额按画质挑（2×1080P + 1×720P），但排序必须回到播放能力：
+        # 晚高峰 1080P 只有 0.7x（卡），720P 是 1.00（流畅），
+        # 不重排的话播放器默认用第一条，等于每次都开那条卡的。
+        chosen.sort(key=rank)
 
         # 本频道一条活的都没测到时，单独把旧源再探一遍。
         # 不能把整份旧清单当成"活着"直接续命：那样坏源会一直被保留。
@@ -587,9 +626,11 @@ def main():
         if not keep:
             print("  [!] 本频道本轮无一条能连上")
         else:
-            hls_n = sum(1 for r in chosen if r["kind"] == "hls")
-            slot = sum(1 for r in chosen if r["kind"] == "ts")
-            print("  [i] 取 %d 条：HLS %d + 组播 %d" % (len(keep), hls_n, slot))
+            n1080 = sum(1 for r in chosen if (r["height"] or 0) >= 1080)
+            n720 = sum(1 for r in chosen if 0 < (r["height"] or 0) < 1080)
+            nunk = len(chosen) - n1080 - n720
+            print("  [i] 取 %d 条：1080P %d + 720P %d + 未知 %d"
+                  % (len(keep), n1080, n720, nunk))
 
         # 心跳只记最终选中的源；旧源复测命中的也在 chosen 里，一并写入。
         # 沿用的死频道没有本轮测量，不伪造数值。
