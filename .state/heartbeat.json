@@ -1,7 +1,7 @@
 {
-  "last_check_utc": "2026-11-14T12:10:24Z",
-  "changed": true,
-  "note": "updated",
+  "last_check_utc": "2026-11-14T14:54:20Z",
+  "changed": false,
+  "note": "no change",
   "total": 6,
   "channels": {
     "广东珠江": [
@@ -20,9 +20,9 @@
       {
         "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
         "ratio": 0.99,
-        "play": 0.986,
-        "mbps": 7.37,
-        "encoded_mbps": 7.48,
+        "play": 0.989,
+        "mbps": 8.03,
+        "encoded_mbps": 8.12,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -30,10 +30,10 @@
       },
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-        "ratio": 0.98,
-        "play": 0.979,
-        "mbps": 8.01,
-        "encoded_mbps": 8.18,
+        "ratio": 0.99,
+        "play": 0.993,
+        "mbps": 8.19,
+        "encoded_mbps": 8.24,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -41,7 +41,7 @@
       },
       {
         "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44",
-        "ratio": 7.02,
+        "ratio": 6.65,
         "play": 1.0,
         "mbps": 1.7,
         "encoded_mbps": 0,
@@ -54,10 +54,10 @@
     "广东影视": [
       {
         "url": "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
-        "ratio": 0.98,
-        "play": 0.984,
-        "mbps": 7.57,
-        "encoded_mbps": 7.69,
+        "ratio": 0.99,
+        "play": 0.989,
+        "mbps": 8.06,
+        "encoded_mbps": 8.15,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -66,9 +66,9 @@
       {
         "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
         "ratio": 0.99,
-        "play": 0.986,
-        "mbps": 7.34,
-        "encoded_mbps": 7.44,
+        "play": 0.992,
+        "mbps": 7.92,
+        "encoded_mbps": 7.99,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -76,9 +76,9 @@
       },
       {
         "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
-        "ratio": 6.18,
+        "ratio": 5.62,
         "play": 1.0,
-        "mbps": 1.39,
+        "mbps": 1.41,
         "encoded_mbps": 0,
         "height": 720,
         "kind": "hls",
