@@ -413,9 +413,52 @@ def read_current():
     return cur, raw
 
 
+def play_ratio(r):
+    """统一口径的「可播放比」，只回答一件事：能不能跟上实时。上限恒为 1.0。
+
+    HLS 的 ratio 是「分段时长 / 下载耗时」，下载有富余就能算出 6.5 这种值；
+    PCR 的 ratio 是「节目时钟推进 / 墙钟推进」，物理上限就是 1.0。
+    这两个数不同量纲，直接比大小会把 720P/1.4Mbps 的窗口源排到
+    1080P/8.2Mbps 的组播前面。带宽富余属于"还能更快"，不属于"更好看"。
+    """
+    if r["clock"] == "unknown":
+        return 0.0
+    return min(r["ratio"], 1.0)
+
+
+def quality_score(r):
+    """排序用的综合分，从高到低依次比：画质档位、播放余量、源类型稳定性。
+
+    - 画质档位：1080P=2，已知 >=720P=1，高度未知=1（按及格处理，不冤杀），
+      明确低于 720P=0。
+    - 播放余量：统一后的 play_ratio 分三档（满速 / 够用 / 不够），
+      不按连续值比较，避免测量噪声压过源类型的真实差异。
+    - 源类型：同样条件下组播优先于 HLS —— HLS 是第三方中转站、带时效签名，
+      历史上整站 302 过；组播是广东本地源，晚高峰才慢。
+    """
+    height = r["height"] or 0
+    if height >= 1080:
+        h_tier = 2
+    elif height == 0 or height >= MIN_HEIGHT:
+        h_tier = 1
+    else:
+        h_tier = 0
+    # 播放余量也分档，不做连续比较：0.99 和 1.00 的差别是测量噪声，
+    # 拿它去压过"组播比 HLS 稳"这种真实差异不合理。
+    p = play_ratio(r)
+    if p >= 0.95:
+        p_tier = 2
+    elif p >= FLUENT_RATIO:
+        p_tier = 1
+    else:
+        p_tier = 0
+    stable = 1 if r["kind"] == "ts" else 0
+    return (h_tier, p_tier, stable)
+
+
 def fluent(r):
-    """有时钟且达到实时播放门槛才算流畅；无 PCR 只能判活，不能排前面。"""
-    return (r["clock"] != "unknown" and r["ratio"] >= FLUENT_RATIO
+    """能跟上实时、且画质不明确低于 720P。"""
+    return (r["clock"] != "unknown" and play_ratio(r) >= FLUENT_RATIO
             and not (r["kind"] == "hls" and 0 < r["height"] < MIN_HEIGHT))
 
 
@@ -429,13 +472,14 @@ def render(picked, measured=None):
         for u in picked.get(ch, []):
             r = rs.get(u)
             # 频道全死沿用旧清单时没有本轮测量，放该频道末尾
-            score = r["ratio"] if r and fluent(r) else -1.0
+            score = quality_score(r) if r and fluent(r) else (-1, -1.0, -1)
             rows.append((ch, u, score))
     out = ["#EXTM3U"]
     for i in range(max((len(picked.get(ch, [])) for ch in CHANNELS), default=0)):
         round_rows = [(ch, u, s) for ch, u, s in rows
                       if picked.get(ch, []).index(u) == i]
-        round_rows.sort(key=lambda x: -x[2])
+        # score 现在是 (画质档位, 播放比, 源类型) 元组，逐项降序
+        round_rows.sort(key=lambda x: x[2], reverse=True)
         for ch, u, score in round_rows:
             out.append('#EXTINF:-1 tvg-id="%s" tvg-name="%s" group-title="%s",%s'
                        % (ch, ch, GROUP, ch))
@@ -509,8 +553,11 @@ def main():
         # 播放能力优先；上一轮已用的源在同档时优先，避免轻微抖动引起频繁换源。
         # 没有 PCR 的源永远排在有时钟的源后面，但可用来保底。
         def rank(r):
-            return (0 if fluent(r) else 1, -r["ratio"],
-                    0 if r["url"] in prev_urls else 1, order.index(r["url"]))
+            # quality_score 三项都按"越大越好"，取负号让 sorted 升序等于降序。
+            return (0 if fluent(r) else 1,
+                    tuple(-x for x in quality_score(r)),
+                    0 if r["url"] in prev_urls else 1,
+                    order.index(r["url"]))
 
         chosen = sorted(scored, key=rank)[:TARGET_PER_CH]
 
@@ -537,13 +584,6 @@ def main():
 
         keep = [r["url"] for r in chosen]
         picked[ch] = keep
-        detail[ch] = [{"url": r["url"], "ratio": round(r["ratio"], 2),
-                       "mbps": round(r["mbps"], 2), "height": r["height"],
-                       "kind": r["kind"], "clock": r["clock"],
-                       "encoded_mbps": round(r.get("encoded_mbps", 0), 2),
-                       "verdict": ("unknown" if r["clock"] == "unknown"
-                                   else "fast" if r["ratio"] >= 1.0 else "slow")}
-                      for r in chosen]
         if not keep:
             print("  [!] 本频道本轮无一条能连上")
         else:
@@ -551,9 +591,19 @@ def main():
             slot = sum(1 for r in chosen if r["kind"] == "ts")
             print("  [i] 取 %d 条：HLS %d + 组播 %d" % (len(keep), hls_n, slot))
 
-        # 旧源复测命中的也补进 measured；沿用的死频道不伪造测量值。
-        selected = {r["url"]: r for r in chosen}
-        detail[ch] = [selected[u] for u in keep if u in selected]
+        # 心跳只记最终选中的源；旧源复测命中的也在 chosen 里，一并写入。
+        # 沿用的死频道没有本轮测量，不伪造数值。
+        detail[ch] = [{"url": r["url"],
+                       "ratio": round(r["ratio"], 2),
+                       "play": round(play_ratio(r), 3),
+                       "mbps": round(r["mbps"], 2),
+                       "encoded_mbps": round(r.get("encoded_mbps", 0), 2),
+                       "height": r["height"],
+                       "kind": r["kind"],
+                       "clock": r["clock"],
+                       "verdict": ("unknown" if r["clock"] == "unknown"
+                                   else "fast" if play_ratio(r) >= 1.0 else "slow")}
+                      for r in chosen]
 
     # 只有一个频道全死时，另一个频道照常更新；死亡的频道沿用上一轮旧清单，
     # 不让整份 m3u 被一个频道的故障拖成"保留旧文件"。
