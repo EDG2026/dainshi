@@ -1,89 +1,89 @@
 {
-  "last_check_utc": "2026-11-14T05:29:15Z",
+  "last_check_utc": "2026-11-14T12:10:24Z",
   "changed": true,
   "note": "updated",
   "total": 6,
   "channels": {
     "广东珠江": [
+      "http://www.3344.uk:8888/udp/239.77.0.1:5146",
       "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-      "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
-      "http://61.145.188.90:50055/udp/239.77.0.1:5146"
+      "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44"
     ],
     "广东影视": [
-      "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-      "http://61.145.188.90:50055/udp/239.77.0.217:5146",
-      "http://lsa.familyds.com:8188/udp/239.77.0.217:5146"
+      "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
+      "http://www.3344.uk:8888/udp/239.77.0.217:5146",
+      "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53"
     ]
   },
   "measured": {
     "广东珠江": [
       {
+        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
+        "ratio": 0.99,
+        "play": 0.986,
+        "mbps": 7.37,
+        "encoded_mbps": 7.48,
+        "height": 1080,
+        "kind": "ts",
+        "clock": "pcr",
+        "verdict": "slow"
+      },
+      {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-        "ratio": 0.99,
-        "play": 0.992,
-        "mbps": 8.53,
-        "encoded_mbps": 8.6,
+        "ratio": 0.98,
+        "play": 0.979,
+        "mbps": 8.01,
+        "encoded_mbps": 8.18,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
         "verdict": "slow"
       },
       {
-        "url": "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
-        "ratio": 0.99,
-        "play": 0.993,
-        "mbps": 6.15,
-        "encoded_mbps": 6.19,
-        "height": 1080,
-        "kind": "ts",
-        "clock": "pcr",
-        "verdict": "slow"
-      },
-      {
-        "url": "http://61.145.188.90:50055/udp/239.77.0.1:5146",
-        "ratio": 0.04,
-        "play": 0.04,
-        "mbps": 0.39,
-        "encoded_mbps": 9.87,
-        "height": 1080,
-        "kind": "ts",
-        "clock": "pcr",
-        "verdict": "slow"
+        "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44",
+        "ratio": 7.02,
+        "play": 1.0,
+        "mbps": 1.7,
+        "encoded_mbps": 0,
+        "height": 720,
+        "kind": "hls",
+        "clock": "hls",
+        "verdict": "fast"
       }
     ],
     "广东影视": [
       {
-        "url": "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-        "ratio": 0.99,
-        "play": 0.99,
-        "mbps": 8.51,
-        "encoded_mbps": 8.6,
-        "height": 1080,
-        "kind": "ts",
-        "clock": "pcr",
-        "verdict": "slow"
-      },
-      {
-        "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
-        "ratio": 1.0,
-        "play": 0.995,
-        "mbps": 8.3,
-        "encoded_mbps": 8.35,
-        "height": 1080,
-        "kind": "ts",
-        "clock": "pcr",
-        "verdict": "slow"
-      },
-      {
         "url": "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
-        "ratio": 0.99,
-        "play": 0.991,
-        "mbps": 8.44,
-        "encoded_mbps": 8.52,
+        "ratio": 0.98,
+        "play": 0.984,
+        "mbps": 7.57,
+        "encoded_mbps": 7.69,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
         "verdict": "slow"
+      },
+      {
+        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
+        "ratio": 0.99,
+        "play": 0.986,
+        "mbps": 7.34,
+        "encoded_mbps": 7.44,
+        "height": 1080,
+        "kind": "ts",
+        "clock": "pcr",
+        "verdict": "slow"
+      },
+      {
+        "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
+        "ratio": 6.18,
+        "play": 1.0,
+        "mbps": 1.39,
+        "encoded_mbps": 0,
+        "height": 720,
+        "kind": "hls",
+        "clock": "hls",
+        "verdict": "fast"
       }
     ]
   }
