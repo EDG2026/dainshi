@@ -1,5 +1,5 @@
 {
-  "last_check_utc": "2026-11-20T06:15:34Z",
+  "last_check_utc": "2026-11-20T16:49:08Z",
   "changed": true,
   "note": "updated",
   "total": 6,
@@ -7,12 +7,12 @@
     "广东珠江": [
       "http://www.yahao.host:4022/udp/239.77.0.1:5146",
       "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
-      "http://www.3344.uk:8888/udp/239.77.0.1:5146"
+      "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44"
     ],
     "广东影视": [
       "http://www.yahao.host:4022/udp/239.77.0.217:5146",
       "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
-      "http://61.145.188.90:50055/udp/239.77.0.217:5146"
+      "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53"
     ]
   },
   "measured": {
@@ -20,9 +20,9 @@
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
         "ratio": 0.99,
-        "play": 0.994,
-        "mbps": 7.63,
-        "encoded_mbps": 7.67,
+        "play": 0.988,
+        "mbps": 7.93,
+        "encoded_mbps": 8.03,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -30,34 +30,34 @@
       },
       {
         "url": "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
-        "ratio": 0.99,
-        "play": 0.99,
-        "mbps": 7.26,
-        "encoded_mbps": 7.33,
+        "ratio": 1.0,
+        "play": 0.996,
+        "mbps": 7.29,
+        "encoded_mbps": 7.32,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
         "verdict": "slow"
       },
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-        "ratio": 0.91,
-        "play": 0.905,
-        "mbps": 6.01,
-        "encoded_mbps": 6.64,
-        "height": 1080,
-        "kind": "ts",
-        "clock": "pcr",
-        "verdict": "slow"
+        "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44",
+        "ratio": 7.12,
+        "play": 1.0,
+        "mbps": 1.73,
+        "encoded_mbps": 0,
+        "height": 720,
+        "kind": "hls",
+        "clock": "hls",
+        "verdict": "fast"
       }
     ],
     "广东影视": [
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-        "ratio": 0.99,
-        "play": 0.988,
-        "mbps": 7.9,
-        "encoded_mbps": 8.0,
+        "ratio": 0.98,
+        "play": 0.984,
+        "mbps": 7.84,
+        "encoded_mbps": 7.97,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -65,25 +65,25 @@
       },
       {
         "url": "http://lsa.familyds.com:8188/udp/239.77.0.217:5146",
-        "ratio": 0.98,
-        "play": 0.984,
-        "mbps": 7.37,
-        "encoded_mbps": 7.48,
+        "ratio": 0.99,
+        "play": 0.992,
+        "mbps": 7.43,
+        "encoded_mbps": 7.49,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
         "verdict": "slow"
       },
       {
-        "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
-        "ratio": 0.95,
-        "play": 0.949,
-        "mbps": 5.44,
-        "encoded_mbps": 5.73,
-        "height": 1080,
-        "kind": "ts",
-        "clock": "pcr",
-        "verdict": "slow"
+        "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
+        "ratio": 5.63,
+        "play": 1.0,
+        "mbps": 1.39,
+        "encoded_mbps": 0,
+        "height": 720,
+        "kind": "hls",
+        "clock": "hls",
+        "verdict": "fast"
       }
     ]
   }
