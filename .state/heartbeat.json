@@ -1,17 +1,17 @@
 {
-  "last_check_utc": "2026-11-25T18:31:21Z",
-  "changed": false,
-  "note": "no change",
+  "last_check_utc": "2026-11-26T07:21:40Z",
+  "changed": true,
+  "note": "updated",
   "total": 6,
   "channels": {
     "广东珠江": [
       "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-      "http://www.3344.uk:8888/udp/239.77.0.1:5146",
+      "https://2.fast.hidns.vip/163189/gdzj",
       "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44"
     ],
     "广东影视": [
       "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-      "http://www.3344.uk:8888/udp/239.77.0.217:5146",
+      "http://61.145.188.90:50055/udp/239.77.0.217:5146",
       "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53"
     ]
   },
@@ -20,7 +20,7 @@
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
         "ratio": 0.99,
-        "play": 0.992,
+        "play": 0.993,
         "mbps": 8.33,
         "encoded_mbps": 8.39,
         "height": 1080,
@@ -29,19 +29,19 @@
         "verdict": "slow"
       },
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-        "ratio": 0.99,
-        "play": 0.995,
-        "mbps": 8.35,
-        "encoded_mbps": 8.4,
+        "url": "https://2.fast.hidns.vip/163189/gdzj",
+        "ratio": 96.7,
+        "play": 1.0,
+        "mbps": 2.73,
+        "encoded_mbps": 0,
         "height": 1080,
-        "kind": "ts",
-        "clock": "pcr",
-        "verdict": "slow"
+        "kind": "hls",
+        "clock": "hls",
+        "verdict": "fast"
       },
       {
         "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44",
-        "ratio": 5.82,
+        "ratio": 5.94,
         "play": 1.0,
         "mbps": 1.71,
         "encoded_mbps": 0,
@@ -55,20 +55,20 @@
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.217:5146",
         "ratio": 0.99,
-        "play": 0.993,
-        "mbps": 8.33,
-        "encoded_mbps": 8.38,
+        "play": 0.994,
+        "mbps": 8.31,
+        "encoded_mbps": 8.36,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
         "verdict": "slow"
       },
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-        "ratio": 1.0,
-        "play": 0.995,
-        "mbps": 8.38,
-        "encoded_mbps": 8.42,
+        "url": "http://61.145.188.90:50055/udp/239.77.0.217:5146",
+        "ratio": 0.96,
+        "play": 0.957,
+        "mbps": 7.88,
+        "encoded_mbps": 8.24,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -76,7 +76,7 @@
       },
       {
         "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
-        "ratio": 7.47,
+        "ratio": 5.84,
         "play": 1.0,
         "mbps": 1.39,
         "encoded_mbps": 0,
