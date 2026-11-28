@@ -1,12 +1,12 @@
 {
-  "last_check_utc": "2026-11-27T17:56:06Z",
-  "changed": false,
-  "note": "no change",
+  "last_check_utc": "2026-11-28T06:49:57Z",
+  "changed": true,
+  "note": "updated",
   "total": 6,
   "channels": {
     "广东珠江": [
       "http://www.yahao.host:4022/udp/239.77.0.1:5146",
-      "http://www.3344.uk:8888/udp/239.77.0.1:5146",
+      "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
       "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44"
     ],
     "广东影视": [
@@ -20,20 +20,20 @@
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.1:5146",
         "ratio": 0.99,
-        "play": 0.99,
-        "mbps": 8.25,
-        "encoded_mbps": 8.33,
+        "play": 0.994,
+        "mbps": 7.58,
+        "encoded_mbps": 7.62,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
         "verdict": "slow"
       },
       {
-        "url": "http://www.3344.uk:8888/udp/239.77.0.1:5146",
-        "ratio": 1.0,
+        "url": "http://lsa.familyds.com:8188/udp/239.77.0.1:5146",
+        "ratio": 0.99,
         "play": 0.995,
-        "mbps": 8.36,
-        "encoded_mbps": 8.4,
+        "mbps": 7.55,
+        "encoded_mbps": 7.59,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -41,9 +41,9 @@
       },
       {
         "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=44",
-        "ratio": 7.14,
+        "ratio": 7.23,
         "play": 1.0,
-        "mbps": 1.74,
+        "mbps": 1.71,
         "encoded_mbps": 0,
         "height": 720,
         "kind": "hls",
@@ -54,10 +54,10 @@
     "广东影视": [
       {
         "url": "http://www.yahao.host:4022/udp/239.77.0.217:5146",
-        "ratio": 0.99,
-        "play": 0.989,
-        "mbps": 8.29,
-        "encoded_mbps": 8.38,
+        "ratio": 0.97,
+        "play": 0.972,
+        "mbps": 7.5,
+        "encoded_mbps": 7.71,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -65,10 +65,10 @@
       },
       {
         "url": "http://www.3344.uk:8888/udp/239.77.0.217:5146",
-        "ratio": 0.99,
-        "play": 0.995,
-        "mbps": 8.45,
-        "encoded_mbps": 8.5,
+        "ratio": 0.96,
+        "play": 0.962,
+        "mbps": 5.47,
+        "encoded_mbps": 5.68,
         "height": 1080,
         "kind": "ts",
         "clock": "pcr",
@@ -76,7 +76,7 @@
       },
       {
         "url": "http://tv.8610000.cn:555/gdtv/gdtv.php?id=53",
-        "ratio": 6.63,
+        "ratio": 6.33,
         "play": 1.0,
         "mbps": 1.39,
         "encoded_mbps": 0,
